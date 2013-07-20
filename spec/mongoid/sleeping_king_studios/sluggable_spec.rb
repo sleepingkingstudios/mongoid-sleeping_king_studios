@@ -23,7 +23,8 @@ describe Mongoid::SleepingKingStudios::Sluggable do
   let(:instance) { described_class.new }
 
   describe '::slugify' do
-    specify { expect(described_class).to respond_to(:slugify).with(1) }
+    let(:options) { %i(lockable) }
+    specify { expect(described_class).to respond_to(:slugify).with(1, *options) }
   end # describe
 
   describe '::sluggable_options' do
@@ -66,8 +67,8 @@ describe Mongoid::SleepingKingStudios::Sluggable do
         specify { expect(instance.to_slug).to be == "zweihander" }
       end # describe
 
-      describe 'removes single and double quotes' do
-        before(:each) { instance.name = "Hello, my name's \"Macintosh\"." }
+      describe 'removes single and double quotes and underscores' do
+        before(:each) { instance.name = "Hello, my_name's \"Macintosh\"." }
 
         specify { expect(instance.to_slug).to be == "hello-my-names-macintosh" }
       end # describe
@@ -100,6 +101,59 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
         specify 'is valid' do
           expect(instance).not_to have_errors
+        end # specify
+      end # context
+    end # describe
+  end # context
+
+  context 'with :name and :lockable => true' do
+    before(:each) do
+      described_class.class_eval do
+        field :name, :type => String
+
+        slugify :name, :lockable => true
+      end # class eval
+    end # before each
+
+    describe '::sluggable_options' do
+      let(:options) { { :attribute => :name, :lockable => true } }
+      specify { expect(described_class.sluggable_options).to be == options }
+    end # describe
+
+    describe '#slug_lock' do
+      specify { expect(instance).to have_reader(:slug_lock).with(false) }
+    end # describe
+
+    describe '#slug_lock=' do
+      specify { expect(instance).to have_writer(:slug_lock=) }
+    end # describe
+
+    describe '#slug=' do
+      specify 'locks the slug' do
+        expect { instance.slug = "zeus" }.to change(instance, :slug_lock).from(false).to(true)
+      end # specify
+    end # describe
+
+    describe 'callbacks' do
+      context 'with a name and a slug set' do
+        before(:each) do
+          instance.name = "Nike"
+          instance.slug = "victoria"
+        end # before each
+
+        specify 'changes the slug' do
+          expect { instance.valid? }.not_to change(instance, :slug)
+        end # specify
+      end # context
+    end # describe
+
+    describe 'validation' do
+      context 'with an invalid format' do
+        before(:each) { instance.slug = "I'm Not A Valid Slug" }
+
+        specify 'is invalid' do
+          expect(instance).to have_errors.on(:slug).
+            with_message 'must be lower-case characters a-z, digits 0-9, and hyphens "-"'
         end # specify
       end # context
     end # describe
