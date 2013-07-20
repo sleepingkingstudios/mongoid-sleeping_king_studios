@@ -3,6 +3,7 @@
 Bundler.require # because the Gemfile specifies gems from git
 
 require 'rspec'
+require 'rspec/sleeping_king_studios'
 require 'factory_girl'
 require 'database_cleaner'
 require 'pry'
