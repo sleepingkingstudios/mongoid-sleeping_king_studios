@@ -49,7 +49,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
     end # describe
 
     describe '#slug=' do
-      specify { expect(instance).to have_writer(:slug=) }
+      specify { expect(instance).not_to have_writer(:slug=) }
     end # describe
 
     describe 'to_slug' do
@@ -65,12 +65,6 @@ describe Mongoid::SleepingKingStudios::Sluggable do
         before(:each) { instance.name = "Zweihänder" }
 
         specify { expect(instance.to_slug).to be == "zweihander" }
-      end # describe
-
-      describe 'removes single and double quotes and underscores' do
-        before(:each) { instance.name = "Hello, my_name's \"Macintosh\"." }
-
-        specify { expect(instance.to_slug).to be == "hello-my-names-macintosh" }
       end # describe
     end # describe
 
@@ -129,12 +123,22 @@ describe Mongoid::SleepingKingStudios::Sluggable do
     end # describe
 
     describe '#slug=' do
+      specify { expect(instance).to have_writer(:slug=) }
+
       specify 'locks the slug' do
         expect { instance.slug = "zeus" }.to change(instance, :slug_lock).from(false).to(true)
       end # specify
     end # describe
 
     describe 'callbacks' do
+      context 'with a name set' do
+        before(:each) { instance.name = "Hephaestus" }
+
+        specify 'does not lock the slug' do
+          expect { instance.valid? }.not_to change(instance, :slug_lock)
+        end # specify
+      end # context
+
       context 'with a name and a slug set' do
         before(:each) do
           instance.name = "Nike"
