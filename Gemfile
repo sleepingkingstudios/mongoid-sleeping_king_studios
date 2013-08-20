@@ -2,6 +2,6 @@
 
 source 'https://rubygems.org'
 
-gem 'mongoid', '~> 4', :github => "mongoid/mongoid"
+gem 'mongoid', '~> 4', :github => "sleepingkingstudios/mongoid"
 
 gemspec

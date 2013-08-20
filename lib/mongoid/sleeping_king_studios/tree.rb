@@ -51,14 +51,14 @@ module Mongoid::SleepingKingStudios
 
     # Returns true if the object is a leaf object, e.g. has no child objects.
     # 
-    # @return [Boolean] true if the object is a leaf; otherwise false
+    # @return [Boolean] True if the object has no children; otherwise false.
     def leaf?
       children.empty?
     end # method leaf?
 
     # Returns true if the object is a root object, e.g. has no parent object.
     # 
-    # @return [Boolean] true if the object is a root; otherwise false
+    # @return [Boolean] True if the object has no parent; otherwise false.
     def root?
       parent.nil?
     end # method root?

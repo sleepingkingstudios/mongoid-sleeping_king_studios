@@ -45,27 +45,51 @@ describe Mongoid::SleepingKingStudios::Tree do
   describe '#parent' do
     specify { expect(instance).to respond_to(:parent).with(0).arguments }
     specify { expect(instance.parent).to be nil }
-
-    context 'with a child' do
-      let(:child) { described_class.new }
-
-      specify 'adding a child sets the child\'s parent' do
-        instance.children << child
-        expect(child.parent).to be == instance
-      end # specify
-    end # context
   end # describe
 
   describe '#children' do
     specify { expect(instance).to respond_to(:children).with(0).arguments }
     specify { expect(instance.children).to be == [] }
+  end # describe
 
-    context 'with a parent' do
-      let(:parent) { described_class.new }
+  describe '#parent=' do
+    specify { expect(instance).to respond_to(:parent=).with(1).arguments }
 
-      specify 'setting a parent adds to the parent\'s children' do
-        instance.parent = parent
-        expect(parent.children).to include instance
+    context 'with a valid parent' do
+      let(:parent) { described_class.create }
+
+      specify 'sets the parent relation' do
+        expect {
+          instance.parent = parent
+        }.to change { instance.parent }.to(parent)
+      end # specify
+
+      specify 'updates the children relation' do
+        expect {
+          instance.parent = parent
+        }.to change { parent.children.to_a }.to([instance])
+      end # specify
+    end # context
+  end # describe
+
+  describe '#children<<' do
+    specify { expect(instance.children).to respond_to(:<<).with(1).arguments }
+
+    context 'with a valid child' do
+      let(:child) { described_class.create }
+
+      before(:each) { instance.save }
+
+      specify 'sets the parent relation' do
+        expect {
+          instance.children << child
+        }.to change(child, :parent).to(instance)
+      end # specify
+
+      specify 'updates the children relation' do
+        expect {
+          instance.children << child
+        }.to change { instance.children.to_a }.to([child])
       end # specify
     end # context
   end # describe
