@@ -12,6 +12,32 @@ module Mongoid::SleepingKingStudios
   #     include Mongoid::SleepingKingStudios::Tree
   #   end # class
   # 
+  # Since 0.3.0, you can customise the generated :parent and :children
+  # relations by defining optional class methods ::options_for_parent and
+  # ::options_for_children, which must return hashes of valid options. These
+  # must be defined prior to including this mixin, or the default options will
+  # be applied instead.
+  # 
+  # In addition, you can customise the names of the relations by adding a
+  # :relation_name key to either ::options_for hash. The concern will
+  # automatically update the respective :inverse_of options to match the
+  # updated relation names.
+  # 
+  # @example Setting up the tree with alternate relation names:
+  #   class EvilEmployee
+  #     include Mongoid::Document
+  # 
+  #     def self.options_for_parent
+  #       { :relation_name => "overlord" }
+  #     end # class method options_for_parent
+  # 
+  #     def self.options_for_children
+  #       { :relation_name => "minions", :dependent => :destroy }
+  #     end # class method options_for_children
+  # 
+  #     include Mongoid::SleepingKingStudios::Tree
+  #   end # class
+  # 
   # @since 0.2.0
   module Tree
     extend ActiveSupport::Concern
@@ -27,8 +53,17 @@ module Mongoid::SleepingKingStudios
     #   @return [Array<Tree>]
 
     included do |base|
-      belongs_to :parent,   :class_name => base.name, :inverse_of => :children
-      has_many   :children, :class_name => base.name, :inverse_of => :parent
+      p_opts = { :relation_name => :parent,   :class_name => base.name }
+      c_opts = { :relation_name => :children, :class_name => base.name }
+      
+      p_opts.update(options_for_parent)   if respond_to?(:options_for_parent)
+      c_opts.update(options_for_children) if respond_to?(:options_for_children)
+
+      p_opts.update :inverse_of => c_opts[:relation_name]
+      c_opts.update :inverse_of => p_opts[:relation_name]
+      
+      belongs_to p_opts.delete(:relation_name), p_opts
+      has_many   c_opts.delete(:relation_name), c_opts
     end # included
 
     # Class methods added to the base class via #extend.

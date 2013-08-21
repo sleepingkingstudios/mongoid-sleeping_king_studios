@@ -47,6 +47,32 @@ Sets up a basic tree structure by adding belongs_to :parent and has_many
       include Mongoid::SleepingKingStudios::Tree
     end # class
 
+#### Options
+
+To customize the created #parent and #children relations, you can define
+::options_for_parent and ::options_for_children class methods before including
+the Tree concern. These methods must return a hash if defined.
+
+    class EvilEmployee
+      include Mongoid::Document
+
+      def self.options_for_parent
+        { :relation_name => :overlord }
+      end # class method options_for_parent
+
+      def self.options_for_children
+        { :relation_name => :minions, :dependent => :destroy }
+      end # class method options_for_children
+
+      include Mongoid::SleepingKingStudios::Tree
+    end # class
+
+Available options include the default Mongoid options for a :belongs_to and a
+:has_many relationship, respectively. In addition, you can set a :relation_name
+option to change the name of the created relation (see example above). The
+concern will automatically update the respective :inverse_of options to match
+the updated relation names.
+
 ## License
 
 RSpec::SleepingKingStudios is released under the

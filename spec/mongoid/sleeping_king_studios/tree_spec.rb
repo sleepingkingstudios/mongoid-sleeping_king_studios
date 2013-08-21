@@ -17,7 +17,7 @@ describe Mongoid::SleepingKingStudios::Tree do
 
   let(:described_class) do
     klass = namespace::TreeImpl
-    klass.send :include, super()
+    klass.send :include, Mongoid::SleepingKingStudios::Tree
     klass
   end # let
   let(:instance) { described_class.new }
@@ -148,5 +148,132 @@ describe Mongoid::SleepingKingStudios::Tree do
         expect(instance).not_to be_root
       end # specify
     end # context
+  end # describe
+
+  describe '::options_for_parent' do
+    let(:options) { {} }
+    let(:described_class) do
+      klass = namespace::TreeImpl
+      klass.instance_eval <<-RUBY
+        def options_for_parent
+          #{options}
+        end # class method options_for_parent
+      RUBY
+      klass.send :include, Mongoid::SleepingKingStudios::Tree
+      klass
+    end # let
+
+    specify { expect(described_class).to respond_to(:options_for_parent).with(0).arguments }
+    specify { expect(described_class.options_for_parent).to be == options }
+
+    describe ':relation_name => "overlord"' do
+      let(:options) { super().update :relation_name => "overlord" }
+
+      describe '#overlord' do
+        specify { expect(instance).to respond_to(:overlord).with(0).arguments }
+        specify { expect(instance.overlord).to be nil }
+      end # describe
+
+      describe '#overlord=' do
+        specify { expect(instance).to respond_to(:overlord=).with(1).arguments }
+
+        context 'with a valid parent' do
+          let(:parent) { described_class.create }
+
+          specify 'sets the parent relation' do
+            expect {
+              instance.overlord = parent
+            }.to change { instance.overlord }.to(parent)
+          end # specify
+
+          specify 'updates the children relation' do
+            expect {
+              instance.overlord = parent
+            }.to change { parent.children.to_a }.to([instance])
+          end # specify
+        end # context
+      end # describe
+    end # describe
+
+    describe ':name => "teacher"' do
+      let(:options) { super().update :name => "teacher" }
+
+      specify { expect(instance).to respond_to(:teacher_id).with(0).arguments }
+      specify { expect(instance.teacher_id).to be nil }
+
+      describe '#parent=' do
+        let(:parent) { described_class.new }
+
+        specify 'changes the teacher id' do
+          expect {
+            instance.parent = parent
+          }.to change { instance.teacher_id }.to parent.id
+        end # specify
+      end # describe
+    end # describe
+  end # describe
+
+  describe '::options_for_children' do
+    let(:options) { {} }
+    let(:described_class) do
+      klass = namespace::TreeImpl
+      klass.instance_eval <<-RUBY
+        def options_for_children
+          #{options}
+        end # class method options_for_children
+      RUBY
+      klass.send :include, Mongoid::SleepingKingStudios::Tree
+      klass
+    end # let
+
+    specify { expect(described_class).to respond_to(:options_for_children).with(0).arguments }
+    specify { expect(described_class.options_for_children).to be == options }
+
+    describe ':relation_name => "minions"' do
+      let(:options) { super().update :relation_name => "minions" }
+
+      describe '#minions' do
+        specify { expect(instance).to respond_to(:minions).with(0).arguments }
+        specify { expect(instance.minions).to be == [] }
+      end # describe
+
+      describe '#minions<<' do
+        specify { expect(instance.minions).to respond_to(:<<).with(1).arguments }
+
+        context 'with a valid child' do
+          let(:child) { described_class.create }
+
+          before(:each) { instance.save }
+
+          specify 'sets the parent relation' do
+            expect {
+              instance.minions << child
+            }.to change(child, :parent).to(instance)
+          end # specify
+
+          specify 'updates the children relation' do
+            expect {
+              instance.minions << child
+            }.to change { instance.minions.to_a }.to([child])
+          end # specify
+        end # context
+      end # describe
+    end # describe
+
+    describe ':dependent => :destroy' do
+      let(:options) { super().update :dependent => :destroy }
+
+      context 'with a child' do
+        let!(:child) { described_class.create :parent => instance }
+
+        before(:each) { instance.save }
+
+        specify 'destroys the child' do
+          expect {
+            instance.destroy
+          }.to change { described_class.count }.from(2).to(0)
+        end # specify
+      end # context
+    end # describe
   end # describe
 end # describe

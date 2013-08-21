@@ -29,4 +29,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'database_cleaner',            '~> 1.0.1'
   gem.add_development_dependency 'fuubar'
   gem.add_development_dependency 'pry'
+  gem.add_development_dependency 'yard'
 end # gemspec
