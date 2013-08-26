@@ -23,6 +23,10 @@ module Mongoid::SleepingKingStudios
   # automatically update the respective :inverse_of options to match the
   # updated relation names.
   # 
+  # Since 0.3.1, you can additionally customise the name of the class methods
+  # used to determine the customised options by changing the value of
+  # Tree.options_for_parent_name and Tree.options_for_children_name.
+  # 
   # @example Setting up the tree with alternate relation names:
   #   class EvilEmployee
   #     include Mongoid::Document
@@ -42,6 +46,27 @@ module Mongoid::SleepingKingStudios
   module Tree
     extend ActiveSupport::Concern
 
+    class << self
+      # Gets the name of the method on the base module that is used to find
+      # customisation options for the :parent relation.
+      # 
+      # @return [Symbol] By default, returns :options_for_parent.
+      # 
+      # @since 0.3.1
+      attr_accessor :options_for_parent_name
+
+      # Gets the name of the method on the base module that is used to find
+      # customisation options for the :children relation.
+      # 
+      # @return [Symbol] By default, returns :options_for_children.
+      # 
+      # @since 0.3.1
+      attr_accessor :options_for_children_name
+    end # class << self
+
+    self.options_for_parent_name   = :options_for_parent
+    self.options_for_children_name = :options_for_children
+
     # @!method parent
     #   Returns the parent object, or nil if the object is a root.
     # 
@@ -56,8 +81,8 @@ module Mongoid::SleepingKingStudios
       p_opts = { :relation_name => :parent,   :class_name => base.name }
       c_opts = { :relation_name => :children, :class_name => base.name }
       
-      p_opts.update(options_for_parent)   if respond_to?(:options_for_parent)
-      c_opts.update(options_for_children) if respond_to?(:options_for_children)
+      p_opts.update(send Tree.options_for_parent_name)   if respond_to?(Tree.options_for_parent_name)
+      c_opts.update(send Tree.options_for_children_name) if respond_to?(Tree.options_for_children_name)
 
       p_opts.update :inverse_of => c_opts[:relation_name]
       c_opts.update :inverse_of => p_opts[:relation_name]

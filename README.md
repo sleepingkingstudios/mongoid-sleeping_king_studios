@@ -49,9 +49,13 @@ Sets up a basic tree structure by adding belongs_to :parent and has_many
 
 #### Options
 
-To customize the created #parent and #children relations, you can define
+To customise the created #parent and #children relations, you can define
 ::options_for_parent and ::options_for_children class methods before including
 the Tree concern. These methods must return a hash if defined.
+
+As of 0.3.1, you can change the name of the class methods used to find the
+customised options by setting Tree.options_for_parent_name and
+Tree.options_for_children_name.
 
     class EvilEmployee
       include Mongoid::Document

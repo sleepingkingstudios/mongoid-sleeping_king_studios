@@ -24,7 +24,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'bson_ext', '~> 1.9.0'
   
   gem.add_development_dependency 'rspec',                       '~> 2.14'
-  gem.add_development_dependency 'rspec-sleeping_king_studios', '>= 1.0.0.rc.2'
+  gem.add_development_dependency 'rspec-sleeping_king_studios', '>= 1.0.0.rc.3'
   gem.add_development_dependency 'factory_girl',                '~> 4.2'
   gem.add_development_dependency 'database_cleaner',            '~> 1.0.1'
   gem.add_development_dependency 'fuubar'
