@@ -54,7 +54,7 @@ describe Mongoid::SleepingKingStudios::Tree do
           root.save!
           rand(1..3).times { described_class.create! :parent_id => root.id }
         end # each
-        expect(described_class.roots.to_a).to be == roots
+        expect(Set.new described_class.roots.to_a).to be == Set.new(roots)
       end # specify
     end # context
   end # describe
