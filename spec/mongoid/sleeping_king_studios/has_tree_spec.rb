@@ -2,24 +2,19 @@
 
 require 'mongoid/sleeping_king_studios/spec_helper'
 
-require 'mongoid/sleeping_king_studios/tree'
+require 'mongoid/sleeping_king_studios/has_tree'
 
-describe Mongoid::SleepingKingStudios::Tree do
-  let(:concern) { Mongoid::SleepingKingStudios::Tree }
-  describe '::options_for_parent_name' do
-    specify { expect(concern).to have_reader(:options_for_parent_name) }
-  end # describe
+describe Mongoid::SleepingKingStudios::HasTree do
+  let(:concern) { Mongoid::SleepingKingStudios::HasTree }
 
-  describe '::options_for_parent_name=' do
-    specify { expect(concern).to have_writer(:options_for_parent_name=) }
-  end # describe
+  describe '::has_tree' do
+    let(:described_class) do
+      klass = Class.new(namespace::Base)
+      klass.send :include, concern
+      klass
+    end # let
 
-  describe '::options_for_children_name' do
-    specify { expect(concern).to have_reader(:options_for_children_name) }
-  end # describe
-
-  describe '::options_for_children_name=' do
-    specify { expect(concern).to have_writer(:options_for_children_name=) }
+    specify { expect(described_class).to respond_to(:has_tree).with(0..2).arguments }
   end # describe
 
   let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
@@ -32,9 +27,12 @@ describe Mongoid::SleepingKingStudios::Tree do
     namespace.send :remove_const, :TreeImpl
   end # after each
 
+  let(:options_for_parent)   { {} }
+  let(:options_for_children) { {} }
   let(:described_class) do
     klass = namespace::TreeImpl
     klass.send :include, concern
+    klass.send :has_tree, options_for_parent, options_for_children
     klass
   end # let
   let(:instance) { described_class.new }
@@ -168,24 +166,8 @@ describe Mongoid::SleepingKingStudios::Tree do
   end # describe
 
   describe '::options_for_parent' do
-    let(:options) { {} }
-    let(:options_name) { :options_for_parent }
-    let(:described_class) do
-      klass = namespace::TreeImpl
-      klass.instance_eval <<-RUBY
-        def #{options_name}
-          #{options}
-        end
-      RUBY
-      klass.send :include, Mongoid::SleepingKingStudios::Tree
-      klass
-    end # let
-
-    specify { expect(described_class).to respond_to(:options_for_parent).with(0).arguments }
-    specify { expect(described_class.options_for_parent).to be == options }
-
     describe ':relation_name => "overlord"' do
-      let(:options) { super().update :relation_name => "overlord" }
+      let(:options_for_parent) { super().update :relation_name => "overlord" }
 
       describe '#overlord' do
         specify { expect(instance).to respond_to(:overlord).with(0).arguments }
@@ -214,7 +196,7 @@ describe Mongoid::SleepingKingStudios::Tree do
     end # describe
 
     describe ':name => "teacher"' do
-      let(:options) { super().update :name => "teacher" }
+      let(:options_for_parent) { super().update :name => "teacher" }
 
       specify { expect(instance).to respond_to(:teacher_id).with(0).arguments }
       specify { expect(instance.teacher_id).to be nil }
@@ -229,44 +211,11 @@ describe Mongoid::SleepingKingStudios::Tree do
         end # specify
       end # describe
     end # describe
-
-    describe 'with a custom options name' do
-      let(:options_name) { :customize_parent }
-
-      before(:each) { concern.stub(:options_for_parent_name).and_return(options_name) }
-
-      describe ':relation_name => "manager"' do
-        let(:options) { super().update :relation_name => "manager" }
-
-        specify { expect(concern.options_for_parent_name).to be == options_name }
-
-        describe '#manager' do
-          specify { expect(instance).to respond_to(:manager).with(0).arguments }
-          specify { expect(instance.manager).to be nil }
-        end # describe
-      end # describe
-    end # describe
   end # describe
 
   describe '::options_for_children' do
-    let(:options) { {} }
-    let(:options_name) { :options_for_children }
-    let(:described_class) do
-      klass = namespace::TreeImpl
-      klass.instance_eval <<-RUBY
-        def #{options_name}
-          #{options}
-        end
-      RUBY
-      klass.send :include, Mongoid::SleepingKingStudios::Tree
-      klass
-    end # let
-
-    specify { expect(described_class).to respond_to(:options_for_children).with(0).arguments }
-    specify { expect(described_class.options_for_children).to be == options }
-
     describe ':relation_name => "minions"' do
-      let(:options) { super().update :relation_name => "minions" }
+      let(:options_for_children) { super().update :relation_name => "minions" }
 
       describe '#minions' do
         specify { expect(instance).to respond_to(:minions).with(0).arguments }
@@ -297,7 +246,7 @@ describe Mongoid::SleepingKingStudios::Tree do
     end # describe
 
     describe ':dependent => :destroy' do
-      let(:options) { super().update :dependent => :destroy }
+      let(:options_for_children) { super().update :dependent => :destroy }
 
       context 'with a child' do
         let!(:child) { described_class.create :parent => instance }
@@ -310,23 +259,6 @@ describe Mongoid::SleepingKingStudios::Tree do
           }.to change { described_class.count }.from(2).to(0)
         end # specify
       end # context
-    end # describe
-
-    describe 'with a custom options name' do
-      let(:options_name) { :customize_children }
-
-      before(:each) { concern.stub(:options_for_children_name).and_return(options_name) }
-
-      describe ':relation_name => "employees"' do
-        let(:options) { super().update :relation_name => "employees" }
-
-        specify { expect(concern.options_for_children_name).to be == options_name }
-
-        describe '#employees' do
-          specify { expect(instance).to respond_to(:employees).with(0).arguments }
-          specify { expect(instance.employees).to be == [] }
-        end # describe
-      end # describe
     end # describe
   end # describe
 end # describe

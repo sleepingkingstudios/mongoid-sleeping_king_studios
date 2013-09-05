@@ -5,6 +5,43 @@ documents and collections.
 
 ## The Mixins
 
+### HasTree
+
+    require 'mongoid/sleeping_king_studios/has_tree'
+
+Sets up a basic tree structure by adding belongs_to :parent and has_many
+:children relations, as well as some helper methods.
+
+From 0.2.0 to 0.3.1, was Mongoid::SleepingKingStudios::Tree
+
+**How To Use:**
+
+    class TreeDocument
+      include Mongoid::Document
+      include Mongoid::SleepingKingStudios::HasTree
+
+      has_tree
+    end # class
+
+#### Options
+
+You can pass customisation options for the generated relations into the
+::has\_tree method.
+
+    class EvilEmployee
+      include Mongoid::Document
+      include Mongoid::SleepingKingStudios::HasTree
+
+      has_tree { :relation_name => :overlord },
+        { :relation_name => :minions, :dependent => :destroy }
+    end # class
+
+Available options include the standard Mongoid options for a :belongs_to and a
+:has_many relationship, respectively. In addition, you can set a :relation_name
+option to change the name of the created relation (see example above). The
+concern will automatically update the respective :inverse_of options to match
+the updated relation names.
+
 ### Sluggable
 
     require 'mongoid/sleeping_king_studios/sluggable'
@@ -32,50 +69,6 @@ short, url-friendly version.
 Allows the slug to be specified manually. Adds an additional slug_lock field
 that is automatically set to true when #slug= is called. To resume tracking the
 base attribute, set :slug_lock to false.
-
-### Tree
-
-    require 'mongoid/sleeping_king_studios/tree'
-
-Sets up a basic tree structure by adding belongs_to :parent and has_many
-:children relations, as well as some helper methods.
-
-**How To Use:**
-
-    class TreeDocument
-      include Mongoid::Document
-      include Mongoid::SleepingKingStudios::Tree
-    end # class
-
-#### Options
-
-To customise the created #parent and #children relations, you can define
-::options_for_parent and ::options_for_children class methods before including
-the Tree concern. These methods must return a hash if defined.
-
-As of 0.3.1, you can change the name of the class methods used to find the
-customised options by setting Tree.options_for_parent_name and
-Tree.options_for_children_name.
-
-    class EvilEmployee
-      include Mongoid::Document
-
-      def self.options_for_parent
-        { :relation_name => :overlord }
-      end # class method options_for_parent
-
-      def self.options_for_children
-        { :relation_name => :minions, :dependent => :destroy }
-      end # class method options_for_children
-
-      include Mongoid::SleepingKingStudios::Tree
-    end # class
-
-Available options include the default Mongoid options for a :belongs_to and a
-:has_many relationship, respectively. In addition, you can set a :relation_name
-option to change the name of the created relation (see example above). The
-concern will automatically update the respective :inverse_of options to match
-the updated relation names.
 
 ## License
 
