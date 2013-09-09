@@ -16,7 +16,7 @@ module Mongoid::SleepingKingStudios
   #     has_tree
   #   end # class
   # 
-  # Since 0.4.0, you must call the class method ::has_tree in order to set up
+  # Since 0.4.1, you must call the class method ::has_tree in order to set up
   # the parent and children relations. You can pass optional parameters into
   # this method to customise the created relations, including the names of the
   # relations.
@@ -26,13 +26,22 @@ module Mongoid::SleepingKingStudios
   #     include Mongoid::Document
   #     include Mongoid::SleepingKingStudios::Tree
   #     
-  #     has_tree { :relation_name => 'overlord' },
-  #       { :relation_name => 'minions', :dependent => :destroy }
+  #     has_tree :parent => { :relation_name => 'overlord' },
+  #       :children => { :relation_name => 'minions', :dependent => :destroy }
   #   end # class
   # 
   # @since 0.2.0
   module HasTree
     extend ActiveSupport::Concern
+
+    # Get the valid options allowed with this concern.
+    # 
+    # @return [ Array<Symbol> ] The valid options.
+    #
+    # @since 0.4.1
+    def self.valid_options
+      %i(children parent)
+    end # class method valid_options
 
     # @!method parent
     #   Returns the parent object, or nil if the object is a root.
@@ -46,27 +55,31 @@ module Mongoid::SleepingKingStudios
 
     # Class methods added to the base class via #extend.
     module ClassMethods
-      # Sets up the relations necessary for the tree structure.
+      # @overload has_tree(options = {})
+      #   Sets up the relations necessary for the tree structure.
       # 
-      # @param [Hash] options_for_parent The options for the belongs_to
-      #   relation. Available options include :relation_name (see below), and
-      #   any options normally supported by a :belongs_to relation.
-      # @option options_for_parent [Symbol] :relation_name (:parent) The name
-      #   of the belongs_to relation.
+      #   @param [Hash] options The options for the relation and the concern as a
+      #     whole.
+      #   @option options [Hash] :parent ({}) The options for the parent
+      #     relation. Supports the :relation_name option, which sets the name of
+      #     the tree's :belongs_to relation, as well as any options normally
+      #     supported by a :belongs_to relation.
+      #   @option options [Hash] :children ({}) The options for the children
+      #     relation. Supports the :relation_name options, which sets the name of
+      #     the tree's :has_many relation, as well as any options normally
+      #     supported by a :has_many relation.
       # 
-      # @param [Hash] options_for_children The options for the has_many
-      #   relation. Available options include :relation_name (see below), and
-      #   any options normally supported by a :has_many relation.
-      # @option options_for_children [Symbol] :relation_name (:children) The
-      #   name of the has_many relation.
-      # 
+      #   @raise [ Mongoid::Errors::InvalidOptions ] If the options are invalid.
+      #
       # @since 0.4.0
-      def has_tree options_for_parent = {}, options_for_children = {}
-        p_opts = { :relation_name => :parent,   :class_name => self.name }
-        c_opts = { :relation_name => :children, :class_name => self.name }
+      def has_tree **options
+        validate_options options
+
+        p_opts  = { :relation_name => :parent,   :class_name => self.name }
+        c_opts  = { :relation_name => :children, :class_name => self.name }
         
-        p_opts.update(options_for_parent)   if Hash === options_for_parent
-        c_opts.update(options_for_children) if Hash === options_for_children
+        p_opts.update(options[:parent])   if Hash === options[:parent]
+        c_opts.update(options[:children]) if Hash === options[:children]
 
         p_opts.update :inverse_of => c_opts[:relation_name]
         c_opts.update :inverse_of => p_opts[:relation_name]
@@ -84,6 +97,26 @@ module Mongoid::SleepingKingStudios
       def roots
         where({ :parent_id => nil })
       end # scope routes
+
+      private
+
+      # Determine if the provided options are valid for the concern.
+      #
+      # @param [ Hash ] options The options to check.
+      #
+      # @raise [ Mongoid::Errors::InvalidOptions ] If the options are invalid.
+      def validate_options options
+        valid_options = Mongoid::SleepingKingStudios::HasTree.valid_options
+        options.keys.each do |key|
+          if !valid_options.include?(key)
+            raise Mongoid::Errors::InvalidOptions.new(
+              :has_tree,
+              key,
+              valid_options
+            ) # end InvalidOptions
+          end # if
+        end # each
+      end # class method validate_options
     end # module
 
     # Returns the root object of the current object's tree.

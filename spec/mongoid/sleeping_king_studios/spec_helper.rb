@@ -20,7 +20,8 @@ Mongoid.load!(File.join(root_path, "config", "mongoid.yml"), :test)
 DatabaseCleaner.strategy = :truncation
 
 RSpec.configure do |config|
-  config.color_enabled = true
+  # :focus => true
+  config.treat_symbols_as_metadata_keys_with_true_values = true
 
   config.after :each do
     DatabaseCleaner.clean

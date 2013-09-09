@@ -32,8 +32,8 @@ You can pass customisation options for the generated relations into the
       include Mongoid::Document
       include Mongoid::SleepingKingStudios::HasTree
 
-      has_tree { :relation_name => :overlord },
-        { :relation_name => :minions, :dependent => :destroy }
+      has_tree :parent => { :relation_name => :overlord },
+        :children => { :relation_name => :minions, :dependent => :destroy }
     end # class
 
 Available options include the standard Mongoid options for a :belongs_to and a

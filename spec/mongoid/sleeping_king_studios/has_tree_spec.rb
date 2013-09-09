@@ -7,14 +7,31 @@ require 'mongoid/sleeping_king_studios/has_tree'
 describe Mongoid::SleepingKingStudios::HasTree do
   let(:concern) { Mongoid::SleepingKingStudios::HasTree }
 
+  describe '::valid_options' do
+    specify { expect(concern).to respond_to(:valid_options).with(0).arguments }
+    specify { expect(concern.valid_options).to include(:children) }
+    specify { expect(concern.valid_options).to include(:parent) }
+  end # describe
+
   describe '::has_tree' do
     let(:described_class) do
       klass = Class.new(namespace::Base)
       klass.send :include, concern
       klass
     end # let
+    let(:valid_options) { %i(parent children) }
 
-    specify { expect(described_class).to respond_to(:has_tree).with(0..2).arguments }
+    specify { expect(described_class).to respond_to(:has_tree).with(valid_options) }
+
+    context 'with invalid options' do
+      let(:options) { { :defenestrate => true } }
+
+      specify 'raises an error' do
+        expect {
+          described_class.send :has_tree, options
+        }.to raise_error Mongoid::Errors::InvalidOptions
+      end # specify
+    end # context
   end # describe
 
   let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
@@ -29,10 +46,11 @@ describe Mongoid::SleepingKingStudios::HasTree do
 
   let(:options_for_parent)   { {} }
   let(:options_for_children) { {} }
+  let(:options) { { :parent => options_for_parent, :children => options_for_children } }
   let(:described_class) do
     klass = namespace::TreeImpl
     klass.send :include, concern
-    klass.send :has_tree, options_for_parent, options_for_children
+    klass.send :has_tree, options
     klass
   end # let
   let(:instance) { described_class.new }
