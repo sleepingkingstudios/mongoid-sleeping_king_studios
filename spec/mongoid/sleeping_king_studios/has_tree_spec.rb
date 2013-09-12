@@ -9,6 +9,7 @@ describe Mongoid::SleepingKingStudios::HasTree do
 
   describe '::valid_options' do
     specify { expect(concern).to respond_to(:valid_options).with(0).arguments }
+    specify { expect(concern.valid_options).to include(:cache_ancestry) }
     specify { expect(concern.valid_options).to include(:children) }
     specify { expect(concern.valid_options).to include(:parent) }
   end # describe
@@ -37,18 +38,18 @@ describe Mongoid::SleepingKingStudios::HasTree do
   let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
   before(:each) do
     klass = Class.new namespace::Base
-    namespace.const_set :TreeImpl, klass
+    namespace.const_set :HasTreeImpl, klass
   end # before each
 
   after(:each) do
-    namespace.send :remove_const, :TreeImpl
+    namespace.send :remove_const, :HasTreeImpl
   end # after each
 
   let(:options_for_parent)   { {} }
   let(:options_for_children) { {} }
   let(:options) { { :parent => options_for_parent, :children => options_for_children } }
   let(:described_class) do
-    klass = namespace::TreeImpl
+    klass = namespace::HasTreeImpl
     klass.send :include, concern
     klass.send :has_tree, options
     klass
@@ -183,7 +184,7 @@ describe Mongoid::SleepingKingStudios::HasTree do
     end # context
   end # describe
 
-  describe '::options_for_parent' do
+  describe '::options[:parent]' do
     describe ':relation_name => "overlord"' do
       let(:options_for_parent) { super().update :relation_name => "overlord" }
 
@@ -231,7 +232,7 @@ describe Mongoid::SleepingKingStudios::HasTree do
     end # describe
   end # describe
 
-  describe '::options_for_children' do
+  describe '::options[:children]' do
     describe ':relation_name => "minions"' do
       let(:options_for_children) { super().update :relation_name => "minions" }
 
