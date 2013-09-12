@@ -45,7 +45,7 @@ the updated relation names.
 #### Cache Ancestry
 
 Stores the chain of ancestors in an :ancestor_ids array field, and adds the
-#ancestors and #descendents scopes.
+\#ancestors and #descendents scopes.
 
     class AncestryTree
       include Mongoid::Document
