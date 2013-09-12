@@ -42,6 +42,23 @@ option to change the name of the created relation (see example above). The
 concern will automatically update the respective :inverse_of options to match
 the updated relation names.
 
+#### Cache Ancestry
+
+Stores the chain of ancestors in an :ancestor_ids array field, and adds the
+#ancestors and #descendents scopes.
+
+    class AncestryTree
+      include Mongoid::Document
+      include Mongoid::SleepingKingStudios::HasTree
+
+      has_tree :cache_ancestry => true
+    end # class
+
+**Warning:** using this option will make many write operations much, much
+slower and more resource-intensive. Do not use this option outside of
+read-heavy applications with very specific requirements, e.g. a directory
+structure where you must access all parent directories on each page view.
+
 ### Sluggable
 
     require 'mongoid/sleeping_king_studios/sluggable'
