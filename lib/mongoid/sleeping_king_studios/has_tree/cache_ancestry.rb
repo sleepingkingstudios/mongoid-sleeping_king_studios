@@ -56,10 +56,10 @@ module Mongoid::SleepingKingStudios
         #   @param [Hash] options The options for the cache_ancestry concern.
         # 
         #   @option options [Hash] :relation_name ('ancestors') The name of the
-        #     generated relation for the array of parents identifiers. If no
-        #     foreign key is defined, sets the foreign key to the singularized
-        #     relation name plus a suffix for the chosen identifier, e.g. the
-        #     default relation name 'ancestors' becomes a field ancestor_ids.
+        #     generated relation for the array of parents. If no foreign key is
+        #     defined, sets the foreign key to the singularized relation name
+        #     plus a suffix for the chosen identifier, e.g. the default
+        #     relation name 'ancestors' becomes a field ancestor_ids.
         # 
         #   @see Mongoid::SleepingKingStudios::HasTree::ClassMethods.has_tree
         def cache_ancestry **options
@@ -70,7 +70,9 @@ module Mongoid::SleepingKingStudios
             options[:cache_ancestry] :
             {}
 
-          relation_name = opts[:relation_name] || 'ancestors'
+          relation_name = opts[:relation_name].blank? ?
+            'ancestors' :
+            opts[:relation_name].to_s
           foreign_key   = opts[:foreign_key]   || :"#{relation_name.singularize}_ids"
 
           binding.pry if $BINDINGi

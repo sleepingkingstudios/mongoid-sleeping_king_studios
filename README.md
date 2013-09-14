@@ -54,6 +54,21 @@ Stores the chain of ancestors in an :ancestor_ids array field, and adds the
       has_tree :cache_ancestry => true
     end # class
 
+**Options**
+
+You can customize the ancestry cache by passing in a hash of options as the
+:cache\_ancestry value in the ::has_tree method.
+
+  class PartGroup
+    include Mongoid::Document
+    include Mongoid::SleepingKingStudios::HasTree
+
+    has_tree :cache_ancestry => { :relation_name => :assemblies }
+  end # class
+
+- _relation\_name_: The name of the generated relation for the array of
+  parent objects. Defaults to 'ancestors'.
+
 **Warning:** Using this option will make many write operations much, much
 slower and more resource-intensive. Do not use this option outside of
 read-heavy applications with very specific requirements, e.g. a directory

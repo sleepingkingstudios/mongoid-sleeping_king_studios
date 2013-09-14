@@ -379,7 +379,7 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
   end # describe
 
   describe '::options[:relation_name]' do
-    let(:options_cache_ancestry) { { :relation_name => 'assemblies' } }
+    let(:options_cache_ancestry) { { :relation_name => :assemblies } }
 
     describe '#assembly_ids' do
       specify { expect(instance).to respond_to(:assembly_ids).with(0).arguments }
