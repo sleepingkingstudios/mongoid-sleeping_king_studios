@@ -77,7 +77,7 @@ module Mongoid::SleepingKingStudios
       #     ancestors in an :ancestor_ids array field. Adds the #ancestors and
       #     #descendents scopes.
       #
-      #     Warning: using this option will make many write operations much,
+      #     Warning: Using this option will make many write operations much,
       #     much slower and more resource-intensive. Do not use this option
       #     outside of read-heavy applications with very specific requirements,
       #     e.g. a directory structure where you must access all parent

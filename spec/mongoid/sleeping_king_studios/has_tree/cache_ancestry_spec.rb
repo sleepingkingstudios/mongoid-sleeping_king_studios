@@ -18,6 +18,11 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
     specify { expect(described_class).to respond_to(:cache_ancestry).with(0).arguments }
   end # describe
 
+  describe '::valid_options' do
+    specify { expect(concern).to respond_to(:valid_options).with(0).arguments }
+    specify { expect(concern.valid_options).to include(:relation_name) }
+  end # describe
+
   let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
   before(:each) do
     klass = Class.new namespace::Base
@@ -240,7 +245,6 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
       end # specify
 
       specify 'sets the ancestor ids' do
-        # binding.pry
         expect {
           instance.parent_id = parent.id
         }.to change { instance.ancestor_ids }.to([parent.id])
@@ -310,19 +314,14 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
   describe 'rebuild_ancestry!' do
     specify { expect(instance).to respond_to(:rebuild_ancestry!).with(0).arguments }
 
-    let(:stranger) { described_class.create! }
+    let(:stranger)    { described_class.create! }
     let(:grandparent) { described_class.create! }
-    let(:parent) { described_class.create! :parent => grandparent }
+    let(:parent)      { described_class.create! :parent => grandparent }
 
     before(:each) do
-      instance['parent_id'] = parent.id
+      instance['parent_id']    = parent.id
       instance['ancestor_ids'] = [stranger.id, nil, parent.id]
     end # before each
-
-    specify { expect(instance.parent).to be == parent }
-    specify 'raises an error' do
-      expect { instance.validate_ancestry! }.to raise_error Mongoid::SleepingKingStudios::Error
-    end # specify
 
     specify 'rebuilds the ancestor ids' do
       expect {
@@ -377,5 +376,187 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
         end # specify
       end # context
     end # context
+  end # describe
+
+  describe '::options[:relation_name]' do
+    let(:options_cache_ancestry) { { :relation_name => 'assemblies' } }
+
+    describe '#assembly_ids' do
+      specify { expect(instance).to respond_to(:assembly_ids).with(0).arguments }
+      specify { expect(instance.assembly_ids).to be == [] }
+    end # describe
+
+    describe '#assembly_ids=' do
+      specify { expect(instance).to respond_to(:assembly_ids=).with(1).arguments }
+
+      context 'with an array of ids' do
+        let(:assembly_ids) { [*0..2] }
+
+        specify 'sets the ancestor ids' do
+          expect {
+            instance.assembly_ids = assembly_ids
+          }.to change {
+            instance.assembly_ids
+          }.to(assembly_ids)
+        end # specify
+      end # context
+    end # describe
+
+    describe '#assemblies' do
+      specify { expect(instance).to respond_to(:assemblies).with(0).arguments }
+      specify { expect(instance.assemblies).to be == [] }
+
+      let(:assemblies) do
+        ary = []
+        3.times do
+          ary << described_class.create(:parent => ary.last)
+        end # times
+        ary
+      end # let
+      let(:assembly_ids) { assemblies.map &:id }
+
+      describe 'with valid assemblies' do
+        before(:each) { instance.assembly_ids = assembly_ids }
+
+        specify 'returns the ancestors' do
+          expect(instance.assemblies).to be == assemblies
+        end # specify
+      end # describe
+    end # describe
+
+    describe '#initialize' do
+      context 'with a valid parent' do
+        let(:parent) { described_class.create }
+        let(:instance) { described_class.new :parent => parent }
+
+        specify 'sets the assembly ids' do
+          expect(instance.assembly_ids).to be == [parent.id]
+        end # specify
+      end # context
+    end # describe
+
+    describe '#parent=' do
+      context 'with a valid parent' do
+        let(:parent) { described_class.create }
+
+        specify 'sets the assembly ids' do
+          expect {
+            instance.parent = parent
+          }.to change { instance.assembly_ids }.to([parent.id])
+        end # specify
+
+        specify 'sets the assemblies' do
+          expect {
+            instance.parent = parent
+          }.to change { instance.assemblies }.to([parent])
+        end # specify
+      end # context
+    end # describe
+
+    describe '#parent_id=' do
+      context 'with a valid parent' do
+        let(:parent) { described_class.create }
+
+        specify 'sets the assembly ids' do
+          expect {
+            instance.parent_id = parent.id
+          }.to change { instance.assembly_ids }.to([parent.id])
+        end # specify
+      end # context
+    end # describe
+
+    describe '#descendents' do
+      specify { expect(instance).to respond_to(:descendents).with(0).arguments }
+      specify { expect(instance.descendents).to be_a Mongoid::Criteria }
+
+      let(:instance) { super().tap &:save! }
+      let!(:strangers) { [*0..2].map { described_class.create! } }
+
+      context 'with many assemblies' do
+        let(:assemblies) do
+          ary = []
+          3.times do
+            ary << described_class.create(:parent => ary.last)
+          end # times
+          ary
+        end # let
+        let(:instance) { described_class.create! :parent => assemblies.last }
+
+        context 'with many children' do
+          let!(:children) { [*0..2].map { described_class.create! :parent => instance } }
+
+          specify 'returns the children' do
+            expect(instance.descendents).to be == children
+          end # specify
+        end # context
+      end # context
+    end # describe
+
+    describe 'rebuild_ancestry!' do
+      specify { expect(instance).to respond_to(:rebuild_ancestry!).with(0).arguments }
+
+      let(:stranger)    { described_class.create! }
+      let(:grandparent) { described_class.create! }
+      let(:parent)      { described_class.create! :parent => grandparent }
+
+      before(:each) do
+        instance['parent_id']    = parent.id
+        instance['assembly_ids'] = [stranger.id, nil, parent.id]
+      end # before each
+
+      specify 'rebuilds the assembly ids' do
+        expect {
+          instance.rebuild_ancestry!
+        }.to change {
+          instance.assembly_ids
+        }.to([grandparent.id, parent.id])
+      end # specify
+    end # describe
+
+    describe '#validate_ancestry!' do
+      specify { expect(instance).to respond_to(:validate_ancestry!).with(0).arguments }
+      specify 'does not raise an error' do
+        expect { instance.validate_ancestry! }.not_to raise_error
+      end # specify
+
+      context 'with many assemblies' do
+        let(:assemblies) do
+          ary = []
+          3.times do
+            ary << described_class.create(:parent => ary.last)
+          end # times
+          ary
+        end # let
+        let(:instance) { described_class.new :parent => assemblies.last }
+
+        specify 'does not raise an error' do
+          expect { instance.validate_ancestry! }.not_to raise_error
+        end # specify
+
+        context 'with a missing assembly' do
+          before(:each) { instance['assembly_ids'][1] = nil }
+
+          specify 'raises an error' do
+            expect { instance.validate_ancestry! }.to raise_error(
+              Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor,
+              /unable to find assembly with id/
+            ) # end expectation
+          end # specify
+        end # context
+
+        context 'with an incorrect assembly' do
+          let(:stranger) { described_class.create }
+
+          before(:each) { instance['assembly_ids'][1] = stranger.id }
+
+          specify 'raises an error' do
+            expect { instance.validate_ancestry! }.to raise_error(
+              Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor,
+              /expected assembly with id/
+            ) # end expectation
+          end # specify
+        end # context
+      end # context
+    end # describe
   end # describe
 end # describe
