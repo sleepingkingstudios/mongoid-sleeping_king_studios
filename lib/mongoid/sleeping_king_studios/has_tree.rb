@@ -83,7 +83,7 @@ module Mongoid::SleepingKingStudios
       #     e.g. a directory structure where you must access all parent
       #     directories on each page view.
       # 
-      #   @see Mongoid::SleepingKingStudios::HasTree::CacheAncestry
+      #   @see Mongoid::SleepingKingStudios::HasTree::CacheAncestry::ClassMethods#cache_ancestry
       # 
       #   @raise [ Mongoid::Errors::InvalidOptions ] If the options are invalid.
       #

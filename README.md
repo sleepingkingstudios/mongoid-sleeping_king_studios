@@ -63,6 +63,7 @@ You can customize the ancestry cache by passing in a hash of options as the
       include Mongoid::Document
       include Mongoid::SleepingKingStudios::HasTree
 
+      # This creates the #assemblies method and #assembly_ids field.
       has_tree :cache_ancestry => { :relation_name => :assemblies }
     end # class
 
