@@ -2,6 +2,6 @@
 
 module Mongoid
   module SleepingKingStudios
-    VERSION = '0.5.0'
+    VERSION = '0.5.1'
   end # module
 end # module
