@@ -5,40 +5,23 @@ require 'mongoid/sleeping_king_studios/spec_helper'
 require 'mongoid/sleeping_king_studios/sluggable'
 
 describe Mongoid::SleepingKingStudios::Sluggable do
-  let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
-  before(:each) do
-    klass = Class.new namespace::Base
-    namespace.const_set :SluggableImpl, klass
-  end # before each
-
-  after(:each) do
-    namespace.send :remove_const, :SluggableImpl
-  end # after each
-
-  let(:described_class) do
-    klass = namespace::SluggableImpl
-    klass.send :include, super()
-    klass
-  end # let
-  let(:instance) { described_class.new }
+  let(:concern) { Mongoid::SleepingKingStudios::Sluggable }
 
   describe '::slugify' do
+    let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
+    let(:described_class) do
+      klass = Class.new(namespace::Base)
+      klass.send :include, concern
+      klass
+    end # let
+
     let(:options) { %i(lockable) }
     specify { expect(described_class).to respond_to(:slugify).with(1, *options) }
   end # describe
 
-  describe '::sluggable_options' do
-    specify { expect(described_class).to have_reader(:sluggable_options) }
-  end # describe
-
   context 'with :name and default options' do
-    before(:each) do
-      described_class.class_eval do
-        field :name, :type => String
-
-        slugify :name
-      end # class eval
-    end # before each
+    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Sluggable::Slug }
+    let(:instance)        { described_class.new }
 
     describe '::sluggable_options' do
       specify { expect(described_class.sluggable_options).to be == { :attribute => :name } }
@@ -101,13 +84,8 @@ describe Mongoid::SleepingKingStudios::Sluggable do
   end # context
 
   context 'with :name and :lockable => true' do
-    before(:each) do
-      described_class.class_eval do
-        field :name, :type => String
-
-        slugify :name, :lockable => true
-      end # class eval
-    end # before each
+    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Sluggable::Lock }
+    let(:instance)        { described_class.new }
 
     describe '::sluggable_options' do
       let(:options) { { :attribute => :name, :lockable => true } }
