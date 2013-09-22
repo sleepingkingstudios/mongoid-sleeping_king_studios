@@ -6,7 +6,9 @@ require 'mongoid/sleeping_king_studios/concern'
 
 describe Mongoid::SleepingKingStudios::Concern do
   let(:concern) do
-    Mongoid::SleepingKingStudios::Concern.new
+    Module.new do
+      extend Mongoid::SleepingKingStudios::Concern
+    end # let
   end # let
   let(:described_class) do
     klass = Class.new do

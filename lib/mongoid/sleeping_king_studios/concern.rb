@@ -9,13 +9,7 @@ module Mongoid::SleepingKingStudios
   # class's ::relations attribute.
   # 
   # @since 0.6.0
-  class Concern < Module
-    def initialize &block
-      extend ActiveSupport::Concern
-
-      class_eval &block if block_given?
-    end # constructor
-
+  module Concern
     def characterize name, options
       Metadata.new name, options
     end # method characterize

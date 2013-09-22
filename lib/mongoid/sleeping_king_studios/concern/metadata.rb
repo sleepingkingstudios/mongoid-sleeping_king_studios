@@ -4,7 +4,7 @@ require 'mongoid/sleeping_king_studios'
 require 'mongoid/sleeping_king_studios/concern'
 
 module Mongoid::SleepingKingStudios
-  class Concern
+  module Concern
     # Stores information about a given concern or relation. By default, stored
     # in the Document class's ::relations attribute. Concerns may subclass
     # Metadata to add further keys and/or functionality.
