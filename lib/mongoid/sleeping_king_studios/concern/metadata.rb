@@ -29,7 +29,7 @@ module Mongoid::SleepingKingStudios
       # 
       # @return [String] The key used to store the metadata.
       def relation_key
-        self[:relation_key] || "sleeping_king_studios::#{name}"
+        self[:relation_key] || name.to_s
       end # method relation_key
 
       # @return [Boolean] True if a custom relation key is defined, otherwise

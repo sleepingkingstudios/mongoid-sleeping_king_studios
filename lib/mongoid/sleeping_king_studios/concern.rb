@@ -10,12 +10,18 @@ module Mongoid::SleepingKingStudios
   # 
   # @since 0.6.0
   module Concern
+    module Relations
+      attr_accessor :sleeping_king_studios
+    end # module
+
     def characterize name, options
       Metadata.new name, options
     end # method characterize
 
     def relate base, name, metadata
-      base.relations.update metadata.relation_key => metadata
+      base.relations.extend Relations
+      base.relations.sleeping_king_studios ||= {}
+      base.relations.sleeping_king_studios.update metadata.relation_key => metadata
     end # method relate
 
     def valid_options

@@ -3,9 +3,79 @@
 require 'mongoid/sleeping_king_studios/spec_helper'
 
 require 'mongoid/sleeping_king_studios/sluggable'
+require 'mongoid/sleeping_king_studios/sluggable/metadata'
 
 describe Mongoid::SleepingKingStudios::Sluggable do
   let(:concern) { Mongoid::SleepingKingStudios::Sluggable }
+
+  shared_examples 'sets the metadata' do
+    let(:relation_key) { 'sluggable' }
+    let(:loaded_meta)  { described_class.relations.sleeping_king_studios[relation_key] }
+
+    specify { expect(loaded_meta).to be_a Mongoid::SleepingKingStudios::Sluggable::Metadata }
+  end # shared examples
+
+  shared_examples 'defines the field' do |name, writer = true|
+    describe "#{name}" do
+      specify { expect(instance).to have_reader(name) }
+    end # describe
+
+    describe "#{name}=" do
+      if writer
+        specify { expect(instance).to have_writer(name) }
+      else  
+        specify { expect(instance).not_to have_writer(name) }
+      end # if-else
+    end # describe
+  end # shared examples
+
+  shared_examples 'redefines the accessor' do |source, target, value = 'Sample String'|
+    let(:relation_key) { 'sluggable' }
+    let(:loaded_meta)  { described_class.relations.sleeping_king_studios[relation_key] }
+
+    describe "#{source}=" do
+      specify "changes #{target}" do
+        expect {
+          instance.send :"#{source}=", value
+        }.to change(instance, target).to loaded_meta.value_to_slug(value)
+      end # specify
+    end # describe
+  end # shared examples
+
+  shared_examples 'validates the field' do |name|
+    context "with an empty #{name}" do
+      specify 'is invalid' do
+        expect(instance).to have_errors.on(name).with_message(/can't be blank/)
+      end # specify
+    end # context
+
+    context "with a non-empty #{name}" do
+      before(:each) { instance['slug'] = "sample-slug" }
+
+      specify 'is valid' do
+        expect(instance).not_to have_errors
+      end # specify
+    end # context
+  end # shared_examples
+
+  describe '::characterize' do
+    let(:name)       { :sluggable }
+    let(:properties) { {} }
+
+    specify { expect(concern).to respond_to(:characterize).with(2).arguments }
+    specify 'returns metadata' do
+      expect(concern.characterize name, properties).to be_a Mongoid::SleepingKingStudios::Sluggable::Metadata
+    end # specify
+
+    let(:metadata) { concern.characterize name, properties }
+
+    specify { expect(metadata.lockable?).to be false }
+  end # describe
+
+  describe '::valid_options' do
+    specify { expect(concern).to respond_to(:valid_options).with(0).arguments }
+    specify { expect(concern.valid_options).to include :lockable }
+  end # describe
 
   describe '::slugify' do
     let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
@@ -17,127 +87,92 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
     let(:options) { %i(lockable) }
     specify { expect(described_class).to respond_to(:slugify).with(1, *options) }
-  end # describe
 
-  context 'with :name and default options' do
-    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Sluggable::Slug }
-    let(:instance)        { described_class.new }
+    context 'with invalid options' do
+      let(:name)    { :jabberwock }
+      let(:options) { { :defenestrate => 'snicker-snack' } }
 
-    describe '::sluggable_options' do
-      specify { expect(described_class.sluggable_options).to be == { :attribute => :name } }
-    end # describe
-
-    describe '#slug' do
-      specify { expect(instance).to have_reader(:slug) }
-    end # describe
-
-    describe '#slug=' do
-      specify { expect(instance).not_to have_writer(:slug=) }
-    end # describe
-
-    describe 'to_slug' do
-      specify { expect(instance).to have_reader(:to_slug).with("") }
-
-      describe 'converts to dashed snake case' do
-        before(:each) { instance.name = "Galactic Ley Line" }
-
-        specify { expect(instance.to_slug).to be == "galactic-ley-line" }
-      end # describe
-
-      describe 'processes non-URL characters' do
-        before(:each) { instance.name = "Zweihänder" }
-
-        specify { expect(instance.to_slug).to be == "zweihander" }
-      end # describe
-    end # describe
-
-    describe 'callbacks' do
-      specify 'evaluates slug before validation' do
-        expect(instance).to receive(:to_slug)
-        instance.valid?
+      specify 'raises an error' do
+        expect {
+          described_class.send :slugify, name, options
+        }.to raise_error Mongoid::Errors::InvalidOptions
       end # specify
+    end # context
 
-      context 'with a name set' do
-        before(:each) { instance.name = "Athena" }
+    context 'with :name and default options' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Sluggable::Slug }
+      let(:instance)        { described_class.new }
 
-        specify 'changes the slug' do
-          expect { instance.valid? }.to change(instance, :slug).from(nil).to("athena")
-        end # specify
-      end # context
-    end # describe
+      it_behaves_like 'sets the metadata'
 
-    describe 'validation' do
-      context 'with an empty slug' do
-        specify 'is invalid' do
-          expect(instance).to have_errors.on(:slug).with_message(/can't be blank/)
-        end # specify
-      end # context
+      it_behaves_like 'defines the field', :slug, false
 
-      context 'with a non-empty slug' do
-        before(:each) { instance.name = "Amare Et Sapere Vix Deo Conceditur" }
+      it_behaves_like 'redefines the accessor', :name, :slug
 
-        specify 'is valid' do
-          expect(instance).not_to have_errors
-        end # specify
-      end # context
-    end # describe
-  end # context
+      it_behaves_like 'validates the field', :slug
 
-  context 'with :name and :lockable => true' do
-    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Sluggable::Lock }
-    let(:instance)        { described_class.new }
-
-    describe '::sluggable_options' do
-      let(:options) { { :attribute => :name, :lockable => true } }
-      specify { expect(described_class.sluggable_options).to be == options }
-    end # describe
-
-    describe '#slug_lock' do
-      specify { expect(instance).to have_reader(:slug_lock).with(false) }
-    end # describe
-
-    describe '#slug_lock=' do
-      specify { expect(instance).to have_writer(:slug_lock=) }
-    end # describe
-
-    describe '#slug=' do
-      specify { expect(instance).to have_writer(:slug=) }
-
-      specify 'locks the slug' do
-        expect { instance.slug = "zeus" }.to change(instance, :slug_lock).from(false).to(true)
-      end # specify
-    end # describe
-
-    describe 'callbacks' do
-      context 'with a name set' do
-        before(:each) { instance.name = "Hephaestus" }
-
-        specify 'does not lock the slug' do
-          expect { instance.valid? }.not_to change(instance, :slug_lock)
-        end # specify
-      end # context
-
-      context 'with a name and a slug set' do
+      context 'saved' do
         before(:each) do
-          instance.name = "Nike"
-          instance.slug = "victoria"
+          instance['slug'] = 'pygmalion'
+          instance.save!
         end # before each
 
-        specify 'changes the slug' do
-          expect { instance.valid? }.not_to change(instance, :slug)
+        specify 'does not raise an error on reload' do
+          expect { instance.reload }.not_to raise_error
         end # specify
       end # context
-    end # describe
+    end # context
 
-    describe 'validation' do
-      context 'with an invalid format' do
-        before(:each) { instance.slug = "I'm Not A Valid Slug" }
+    context 'with :name and :lockable => true' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Sluggable::Lock }
+      let(:instance)        { described_class.new }
 
-        specify 'is invalid' do
-          expect(instance).to have_errors.on(:slug).
-            with_message 'must be lower-case characters a-z, digits 0-9, and hyphens "-"'
+      it_behaves_like 'sets the metadata'
+
+      it_behaves_like 'defines the field', :slug, true
+
+      it_behaves_like 'defines the field', :slug_lock, true
+
+      it_behaves_like 'redefines the accessor', :name, :slug
+
+      it_behaves_like 'validates the field', :slug
+
+      describe '#slug=' do
+        specify 'locks the slug' do
+          expect {
+            instance.slug = "zeus"
+          }.to change(instance, :slug_lock).from(false).to(true)
         end # specify
+      end # describe
+
+      context 'locked' do
+        before(:each) do
+          instance['slug'] = 'prolegomenon'
+          instance['slug_lock'] = true
+        end # before each
+
+        let(:value) { "Something Classy" }
+
+        describe 'name=' do
+          specify 'does not change the slug' do
+            expect {
+              instance.name = value
+            }.not_to change(instance, :slug)
+          end # specify
+        end # describe
+
+        context 'and unlocked' do
+          before(:each) { instance['slug_lock'] = false }
+
+          describe 'name=' do
+            specify 'changes the slug' do
+              expect {
+                instance.name = value
+              }.to change(instance, :slug)
+            end # specify
+          end # describe
+        end # context
       end # context
-    end # describe
-  end # context
+    end # context  
+  end # describe
 end # describe

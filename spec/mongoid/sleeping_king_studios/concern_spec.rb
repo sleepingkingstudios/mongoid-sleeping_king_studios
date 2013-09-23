@@ -5,6 +5,19 @@ require 'mongoid/sleeping_king_studios/spec_helper'
 require 'mongoid/sleeping_king_studios/concern'
 
 describe Mongoid::SleepingKingStudios::Concern do
+  describe '::Relations' do
+    let(:concern)  { Mongoid::SleepingKingStudios::Concern::Relations }
+    let(:instance) { Object.new.tap { |obj| obj.extend concern } }
+
+    describe '#sleeping_king_studios' do
+      specify { expect(instance).to have_reader :sleeping_king_studios }
+    end # describe
+
+    describe '#sleeping_king_studios=' do
+      specify { expect(instance).to have_writer :sleeping_king_studios }
+    end # describe
+  end # describe
+
   let(:concern) do
     Module.new do
       extend Mongoid::SleepingKingStudios::Concern
@@ -43,10 +56,13 @@ describe Mongoid::SleepingKingStudios::Concern do
     let(:metadata)   { Mongoid::SleepingKingStudios::Concern::Metadata.new name, properties }
 
     specify { expect(concern).to respond_to(:relate).with(3).arguments }
+    specify 'adds the namespace to relations' do
+      concern.relate described_class, name, metadata
+      expect(described_class.relations).to have_property :sleeping_king_studios
+    end # specify
     specify 'updates the relations' do
-      expect {
-        concern.relate described_class, name, metadata
-      }.to change(described_class, :relations).to("sleeping_king_studios::#{name}" => metadata)
+      concern.relate described_class, name, metadata
+      expect(described_class.relations.sleeping_king_studios).to be == { metadata.relation_key => metadata }
     end # specify
   end # describe
 

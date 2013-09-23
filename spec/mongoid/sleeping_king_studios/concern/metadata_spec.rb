@@ -48,7 +48,7 @@ describe Mongoid::SleepingKingStudios::Concern::Metadata do
 
   describe '#relation_key' do
     specify { expect(instance).to respond_to(:relation_key).with(0).arguments }
-    specify { expect(instance.relation_key).to be == "sleeping_king_studios::#{name}" }
+    specify { expect(instance.relation_key).to be == name.to_s }
 
     describe '#[]' do
       let(:value) { "prefix::suffix" }
