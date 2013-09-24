@@ -29,6 +29,31 @@ module Mongoid::SleepingKingStudios
 
     # @api private
     # 
+    # Sets up the sluggable relation, creating fields, accessors and
+    # validations.
+    # 
+    # @param [Class] base The base class into which the concern is mixed in.
+    # @param [String, Symbol] attribute The base field used to determine
+    #   the value of the slug. When this field is changed via its writer
+    #   method, the slug will be updated.
+    # @param [Metadata] metadata The metadata for the relation.
+    # 
+    # @since 0.6.0
+    def self.apply base, attribute, options
+      validate_options attribute, options
+
+      meta = characterize :sluggable, options
+      meta[:attribute] = attribute
+
+      relate base, :sluggable, meta
+
+      define_fields      base, meta
+      define_accessors   base, meta
+      define_validations base, meta
+    end # module method apply
+
+    # @api private
+    # 
     # Creates a metadata instance for the relation.
     # 
     # @param [Symbol] name The name of the relation. Must be unique for the
@@ -139,25 +164,22 @@ module Mongoid::SleepingKingStudios
       # @overload slugify attribute, options = {}
       #   Creates the :slug field and sets up the callback and validations.
       # 
-      #   @param [String, Symbol] attribute
+      #   @param [String, Symbol] attribute The base field used to determine
+      #     the value of the slug. When this field is changed via its writer
+      #     method, the slug will be updated.
+      #   @param [Hash] options The options for the relation.
       #   @option options [Boolean] :lockable
       #     The :lockable option allows the manual setting of the :slug field.
       #     To do so, it adds an additional :slug_lock field, which defaults to
       #     false but is set to true whenever #slug= is called. If the slug is
       #     locked, its value is not updated to track the base attribute. To
       #     resume tracking the base attribute, set :slug_lock to false.
+      # 
+      #   @raise [Mongoid::Errors::InvalidOptions] If any of the provided
+      #     options are invalid.
       def slugify attribute, **options
         concern = Mongoid::SleepingKingStudios::Sluggable
-        concern.validate_options attribute, options
-
-        meta    = concern.characterize :sluggable, options
-        meta[:attribute] = attribute
-
-        concern.relate self, :sluggable, meta
-
-        concern.define_fields      self, meta
-        concern.define_accessors   self, meta
-        concern.define_validations self, meta
+        concern.apply self, attribute, options
       end # class method slugify
     end # module
   end # module
