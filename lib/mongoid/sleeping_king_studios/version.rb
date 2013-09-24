@@ -2,6 +2,7 @@
 
 module Mongoid
   module SleepingKingStudios
+    # The current version of the gem.
     VERSION = '0.5.1'
   end # module
 end # module

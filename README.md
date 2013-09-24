@@ -99,7 +99,7 @@ short, url-friendly version.
 
     slugify :title, :lockable => true
 
-Allows the slug to be specified manually. Adds an additional slug_lock field
+Allows the slug to be specified manually. Adds an additional #slug_lock field
 that is automatically set to true when #slug= is called. To resume tracking the
 base attribute, set :slug_lock to false.
 
