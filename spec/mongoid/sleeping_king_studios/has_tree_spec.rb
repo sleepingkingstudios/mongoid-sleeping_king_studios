@@ -221,6 +221,22 @@ describe Mongoid::SleepingKingStudios::HasTree do
       it_behaves_like 'creates the parent and children relations', :overlord, :minions
 
       it_behaves_like 'adds the helper methods', :overlord, :minions
+
+      describe 'dependent => destroy' do
+        let!(:children) do
+          [*0..2].map { described_class.create! :overlord => instance }
+        end # let
+
+        before(:each) do
+          instance.save!
+        end # before each
+
+        specify 'deletes dependent models' do
+          expect {
+            instance.destroy
+          }.to change(described_class, :count).to(0)
+        end # specify
+      end # describe
     end # context
   end # describe
 end # describe
