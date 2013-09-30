@@ -8,8 +8,8 @@ require 'factory_girl'
 require 'database_cleaner'
 require 'pry'
 
-#=# Require Factories, Custom Matchers, &c #=#
-Dir[File.join __dir__, 'support', '**', '*.rb'].each { |f| require f }
+### Require Factories, Custom Matchers, &c ###
+Dir[File.join __dir__, *%w(support ** *.rb)].each { |f| require f }
 
 root_path = __dir__.gsub /#{File.join %w(spec mongoid sleeping_king_studios)}$/, ''
 

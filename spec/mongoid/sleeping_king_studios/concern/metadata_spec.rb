@@ -25,6 +25,56 @@ describe Mongoid::SleepingKingStudios::Concern::Metadata do
     end # context
   end # describe
 
+  describe '#properties' do
+    specify { expect(instance).to respond_to(:properties).with(0).arguments }
+    specify { expect(instance.properties).to be_a Hash }
+
+    context 'with set properties' do
+      let(:properties) { { :key => :value } }
+
+      specify 'sets the value' do
+        expect(instance.properties).to be == properties
+      end # specify
+    end # context
+  end # describe
+
+  describe '#characterize' do
+    specify { expect(instance).to respond_to(:characterize).with(2..3).arguments }
+
+    let(:rel_name)       { :property }
+    let(:rel_properties) { { :key => :value } }
+
+    let(:rel_metadata) { instance.characterize rel_name, rel_properties }
+
+    specify 'creates the metadata' do
+      expect(rel_metadata).to be_a Mongoid::SleepingKingStudios::Concern::Metadata
+    end # specify
+
+    specify 'sets the value' do
+      expect(rel_metadata[:key]).to be == :value
+    end # specify
+
+    context 'with a type specified' do
+      let(:rel_type) do
+        Class.new(Mongoid::SleepingKingStudios::Concern::Metadata) do
+          def key
+            self[:key]
+          end # method key
+        end # class
+      end # let
+
+      let(:rel_metadata) { instance.characterize rel_name, rel_properties, rel_type }
+
+      specify 'creates the metadata' do
+        expect(rel_metadata).to be_a rel_type
+      end # specify
+
+      specify 'sets the value' do
+        expect(rel_metadata.key).to be == :value
+      end # specify
+    end # context
+  end # describe
+
   describe '#[]' do
     specify { expect(instance).to respond_to(:[]).with(1).arguments }
   end # describe

@@ -75,8 +75,6 @@ module Mongoid::SleepingKingStudios
             opts[:relation_name].to_s
           foreign_key   = opts[:foreign_key]   || :"#{relation_name.singularize}_ids"
 
-          binding.pry if $BINDINGi
-
           field foreign_key, :type => Array, :default => []
 
           alias_method :"set_parent_id", :"#{parent_name}_id="

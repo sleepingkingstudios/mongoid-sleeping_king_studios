@@ -36,36 +36,21 @@ module Mongoid::SleepingKingStudios
     # @param [String, Symbol] attribute The base field used to determine
     #   the value of the slug. When this field is changed via its writer
     #   method, the slug will be updated.
-    # @param [Metadata] metadata The metadata for the relation.
+    # @param [Hash] options The options for the relation.
     # 
     # @since 0.6.0
     def self.apply base, attribute, options
-      validate_options attribute, options
-
-      meta = characterize :sluggable, options
+      name = :sluggable
+      validate_options    name, options
+      meta = characterize name, options, Metadata
       meta[:attribute] = attribute
 
-      relate base, :sluggable, meta
+      relate base, name, meta
 
       define_fields      base, meta
       define_accessors   base, meta
       define_validations base, meta
     end # module method apply
-
-    # @api private
-    # 
-    # Creates a metadata instance for the relation.
-    # 
-    # @param [Symbol] name The name of the relation. Must be unique for the
-    #   base type within the sleeping_king_studios namespace.
-    # @param [Hash] options The options for the relation.
-    # 
-    # @return [Metadata] The generated metadata.
-    # 
-    # @since 0.6.0
-    def self.characterize name, options
-      Metadata.new name, options
-    end # module method characterize
 
     # @api private
     # 

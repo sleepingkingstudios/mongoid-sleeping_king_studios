@@ -10,25 +10,18 @@ module Mongoid::SleepingKingStudios
   # 
   # @since 0.6.0
   module Concern
-    # Mixin to add a #sleeping_king_studios property to the #relations hash.
+    # @overload characterize name, properties, type = Metadata
+    #   Creates a metadata instance for the relation.
     # 
-    # @example
-    #   base.relations.extend Relations
-    module Relations
-      # Stores relations from Mongoid::SleepingKingStudios in a nested hash
-      # to avoid automatic behaviour on the base #relations hash.
-      attr_accessor :sleeping_king_studios
-    end # module
-
-    # Creates a metadata instance for the relation.
+    #   @param [Symbol] name The name of the relation. Must be unique for the
+    #     base type within the sleeping_king_studios namespace.
+    #   @param [Hash] options The options for the relation.
+    #   @param [Class] type The type of the generated metadata.
     # 
-    # @param [Symbol] name The name of the relation. Must be unique for the
-    #   base type within the sleeping_king_studios namespace.
-    # @param [Hash] options The options for the relation.
-    # 
-    # @return [Metadata] The generated metadata.
-    def characterize name, options
-      Metadata.new name, options
+    #   @return [Metadata] The generated metadata.
+    def characterize name, options, type = nil
+      type ||= Mongoid::SleepingKingStudios::Concern::Metadata
+      type.new name, options
     end # method characterize
 
     # Stores the metadata in the class's relations object. To avoid automatic
@@ -41,11 +34,7 @@ module Mongoid::SleepingKingStudios
     #   base type within the sleeping_king_studios namespace.
     # @param [Metadata] metadata The metadata to be stored.
     def relate base, name, metadata
-      unless base.relations.respond_to?(:sleeping_king_studios)
-        base.relations.extend Relations 
-        base.relations.sleeping_king_studios = {}
-      end # unless
-      base.relations.sleeping_king_studios.update metadata.relation_key => metadata
+      base.relations_sleeping_king_studios.update metadata.relation_key => metadata
     end # method relate
 
     # Returns a list of options that are valid for this concern.

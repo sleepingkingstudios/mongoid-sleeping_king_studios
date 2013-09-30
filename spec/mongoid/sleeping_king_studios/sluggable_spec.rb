@@ -10,7 +10,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
   shared_examples 'sets the metadata' do
     let(:relation_key) { 'sluggable' }
-    let(:loaded_meta)  { described_class.relations.sleeping_king_studios[relation_key] }
+    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[relation_key] }
 
     specify { expect(loaded_meta).to be_a Mongoid::SleepingKingStudios::Sluggable::Metadata }
   end # shared examples
@@ -31,7 +31,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
   shared_examples 'redefines the accessor' do |source, target, value = 'Sample String'|
     let(:relation_key) { 'sluggable' }
-    let(:loaded_meta)  { described_class.relations.sleeping_king_studios[relation_key] }
+    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[relation_key] }
 
     describe "#{source}=" do
       specify "changes #{target}" do
@@ -57,20 +57,6 @@ describe Mongoid::SleepingKingStudios::Sluggable do
       end # specify
     end # context
   end # shared_examples
-
-  describe '::characterize' do
-    let(:name)       { :sluggable }
-    let(:properties) { {} }
-
-    specify { expect(concern).to respond_to(:characterize).with(2).arguments }
-    specify 'returns metadata' do
-      expect(concern.characterize name, properties).to be_a Mongoid::SleepingKingStudios::Sluggable::Metadata
-    end # specify
-
-    let(:metadata) { concern.characterize name, properties }
-
-    specify { expect(metadata.lockable?).to be false }
-  end # describe
 
   describe '::valid_options' do
     specify { expect(concern).to respond_to(:valid_options).with(0).arguments }

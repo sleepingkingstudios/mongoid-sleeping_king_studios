@@ -1,6 +1,8 @@
 # lib/mongoid/sleeping_king_studios/tree.rb
 
 require 'mongoid/sleeping_king_studios'
+require 'mongoid/sleeping_king_studios/concern'
+require 'mongoid/sleeping_king_studios/has_tree/metadata'
 require 'mongoid/sleeping_king_studios/has_tree/cache_ancestry'
 
 module Mongoid::SleepingKingStudios
@@ -34,6 +36,94 @@ module Mongoid::SleepingKingStudios
   # @since 0.2.0
   module HasTree
     extend ActiveSupport::Concern
+    extend Mongoid::SleepingKingStudios::Concern
+
+    # @api private
+    # 
+    # Sets up the sluggable relation, creating fields, accessors and
+    # validations.
+    # 
+    # @param [Class] base The base class into which the concern is mixed in.
+    # @param [Hash] options The options for the relation.
+    # 
+    # @since 0.6.0
+    def self.apply base, options
+      options[:parent]   ||= {}
+      options[:children] ||= {}
+
+      options[:parent][:inverse_of]   = options[:children].fetch(:relation_name, :children)
+      options[:children][:inverse_of] = options[:parent].fetch(:relation_name,   :parent)
+
+      name = :has_tree
+      validate_options    name, options
+      meta = characterize name, options, Metadata
+
+      relate base, name, meta
+
+      define_relations base, meta
+      define_helpers   base, meta
+
+      if meta.cache_ancestry?
+        base.send :include, Mongoid::SleepingKingStudios::HasTree::CacheAncestry
+        base.send :cache_ancestry, **options
+      end # if
+    end # class method apply
+
+    # @api private
+    # 
+    # Sets up the helper methods for the relations as follows.
+    # 
+    # Defines the following class methods:
+    # - ::roots
+    # 
+    # Defines the following instance methods:
+    # - #leaf?
+    # - #root
+    # - #root?
+    # 
+    # @param [Class] base The base class into which the concern is mixed in.
+    # @param [Metadata] metadata The metadata for the relation.
+    # 
+    # @since 0.6.0
+    def self.define_helpers base, metadata
+      base.metaclass.send :define_method, :roots do
+        where({ :"#{metadata.parent.relation_name}_id" => nil })
+      end # class method roots
+
+      base.send :define_method, :root do
+        parent = send(metadata.parent.relation_name)
+        parent ? parent.root : self
+      end # method root
+
+      base.send :define_method, :leaf? do
+        send(metadata.children.relation_name).blank?
+      end # method root?
+
+      base.send :define_method, :root? do
+        send(metadata.parent.relation_name).nil?
+      end # method root?
+    end # class method define_helpers
+
+    # @api private
+    # 
+    # Sets up the parent and children relations.
+    # 
+    # @param [Class] base The base class into which the concern is mixed in.
+    # @param [Metadata] metadata The metadata for the relation.
+    # 
+    # @since 0.6.0
+    def self.define_relations base, metadata
+      parent_options = metadata.parent.properties.dup
+      parent_options.update :class_name => base.name
+      parent_options.delete :relation_name
+
+      children_options = metadata.children.properties.dup
+      children_options.update :class_name => base.name
+      children_options.delete :relation_name
+
+      base.belongs_to metadata.parent.relation_name,   parent_options
+      base.has_many   metadata.children.relation_name, children_options
+    end # class method define_relations
 
     # Get the valid options allowed with this concern.
     # 
@@ -89,81 +179,30 @@ module Mongoid::SleepingKingStudios
       #
       # @since 0.4.0
       def has_tree **options
-        validate_options options
-
-        # Create Relations
-        p_opts  = { :relation_name => :parent,   :class_name => self.name }
-        c_opts  = { :relation_name => :children, :class_name => self.name }
-        
-        p_opts.update(options[:parent])   if Hash === options[:parent]
-        c_opts.update(options[:children]) if Hash === options[:children]
-
-        p_opts.update :inverse_of => c_opts[:relation_name]
-        c_opts.update :inverse_of => p_opts[:relation_name]
-        
-        belongs_to p_opts.delete(:relation_name), p_opts
-        has_many   c_opts.delete(:relation_name), c_opts
-
-        options[:parent]   = p_opts
-        options[:children] = c_opts
-
-        # Set Up Ancestry Cache
-        if options.has_key? :cache_ancestry
-          self.send :include, Mongoid::SleepingKingStudios::HasTree::CacheAncestry
-          self.send :cache_ancestry, **options
-        end # if
-
-        self
+        concern = Mongoid::SleepingKingStudios::HasTree
+        concern.apply self, options
       end # class method has_tree
 
-      # Returns a Criteria specifying all root objects, e.g. objects with no
-      # parent object.
+      # @!method roots
+      #   Returns a Criteria specifying all root objects, e.g. objects with no
+      #   parent object.
       # 
-      # @return [Mongoid::Criteria]
-      def roots
-        where({ :parent_id => nil })
-      end # scope routes
-
-      private
-
-      # Determine if the provided options are valid for the concern.
-      #
-      # @param [ Hash ] options The options to check.
-      #
-      # @raise [ Mongoid::Errors::InvalidOptions ] If the options are invalid.
-      def validate_options options
-        valid_options = Mongoid::SleepingKingStudios::HasTree.valid_options
-        options.keys.each do |key|
-          if !valid_options.include?(key)
-            raise Mongoid::Errors::InvalidOptions.new(
-              :has_tree,
-              key,
-              valid_options
-            ) # end InvalidOptions
-          end # if
-        end # each
-      end # class method validate_options
+      #   @return [Mongoid::Criteria]
     end # module
 
-    # Returns the root object of the current object's tree.
+    # @!method root
+    #   Returns the root object of the current object's tree.
     # 
-    # @return [Tree]
-    def root
-      parent ? parent.root : self
-    end # method root
+    #   @return [Tree]
 
-    # Returns true if the object is a leaf object, e.g. has no child objects.
+    # @!method leaf?
+    #   Returns true if the object is a leaf object, e.g. has no child objects.
     # 
-    # @return [Boolean] True if the object has no children; otherwise false.
-    def leaf?
-      children.empty?
-    end # method leaf?
+    #   @return [Boolean] True if the object has no children; otherwise false.
 
-    # Returns true if the object is a root object, e.g. has no parent object.
+    # @!method root?
+    #   Returns true if the object is a root object, e.g. has no parent object.
     # 
-    # @return [Boolean] True if the object has no parent; otherwise false.
-    def root?
-      parent.nil?
-    end # method root?
+    #   @return [Boolean] True if the object has no parent; otherwise false.
   end # module
 end # module
