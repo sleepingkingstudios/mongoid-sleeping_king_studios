@@ -40,7 +40,7 @@ module Mongoid::SleepingKingStudios
 
     # @api private
     # 
-    # Sets up the sluggable relation, creating fields, accessors and
+    # Sets up the has_tree relation, creating fields, accessors and
     # validations.
     # 
     # @param [Class] base The base class into which the concern is mixed in.

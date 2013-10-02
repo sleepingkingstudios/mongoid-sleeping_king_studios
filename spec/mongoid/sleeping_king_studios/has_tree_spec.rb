@@ -200,43 +200,43 @@ describe Mongoid::SleepingKingStudios::HasTree do
         }.to raise_error Mongoid::Errors::InvalidOptions
       end # specify
     end # context
-
-    context 'with default options' do
-      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::HasTree::Tree }
-      let(:instance)        { described_class.new }
-
-      it_behaves_like 'sets the metadata', :parent, :children
-
-      it_behaves_like 'creates the parent and children relations', :parent, :children
-
-      it_behaves_like 'adds the helper methods', :parent, :children
-    end # context
-
-    context 'with :parent => :overlord and :children => :minions' do
-      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::HasTree::Villain }
-      let(:instance)        { described_class.new }
-
-      it_behaves_like 'sets the metadata', :overlord, :minions
-
-      it_behaves_like 'creates the parent and children relations', :overlord, :minions
-
-      it_behaves_like 'adds the helper methods', :overlord, :minions
-
-      describe 'dependent => destroy' do
-        let!(:children) do
-          [*0..2].map { described_class.create! :overlord => instance }
-        end # let
-
-        before(:each) do
-          instance.save!
-        end # before each
-
-        specify 'deletes dependent models' do
-          expect {
-            instance.destroy
-          }.to change(described_class, :count).to(0)
-        end # specify
-      end # describe
-    end # context
   end # describe
+  
+  context 'with default options' do
+    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::HasTree::Tree }
+    let(:instance)        { described_class.new }
+
+    it_behaves_like 'sets the metadata', :parent, :children
+
+    it_behaves_like 'creates the parent and children relations', :parent, :children
+
+    it_behaves_like 'adds the helper methods', :parent, :children
+  end # context
+
+  context 'with :parent => :overlord and :children => :minions' do
+    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::HasTree::Villain }
+    let(:instance)        { described_class.new }
+
+    it_behaves_like 'sets the metadata', :overlord, :minions
+
+    it_behaves_like 'creates the parent and children relations', :overlord, :minions
+
+    it_behaves_like 'adds the helper methods', :overlord, :minions
+
+    describe 'dependent => destroy' do
+      let!(:children) do
+        [*0..2].map { described_class.create! :overlord => instance }
+      end # let
+
+      before(:each) do
+        instance.save!
+      end # before each
+
+      specify 'deletes dependent models' do
+        expect {
+          instance.destroy
+        }.to change(described_class, :count).to(0)
+      end # specify
+    end # describe
+  end # context
 end # describe

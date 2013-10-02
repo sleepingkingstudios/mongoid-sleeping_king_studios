@@ -1,6 +1,7 @@
 # lib/mongoid/sleeping_king_studios/has_tree/cache_ancestry.rb
 
 require 'mongoid/sleeping_king_studios'
+require 'mongoid/sleeping_king_studios/concern'
 require 'mongoid/sleeping_king_studios/has_tree/errors'
 
 module Mongoid::SleepingKingStudios
@@ -21,6 +22,20 @@ module Mongoid::SleepingKingStudios
     # @since 0.5.0
     module CacheAncestry
       extend ActiveSupport::Concern
+      extend Mongoid::SleepingKingStudios::Concern
+
+      # @api private
+      # 
+      # Sets up the ancestry caching concern.
+      # 
+      # @param [Class] base The base class into which the concern is mixed in.
+      # @param [Hash] options The options for the relation.
+      # 
+      # @since 0.6.0
+      def self.apply base, options
+        name = :has_tree_cache_ancestry
+        validate_options name, options
+      end # class method apply
 
       # Get the valid options allowed with this concern.
       # 
@@ -85,7 +100,7 @@ module Mongoid::SleepingKingStudios
               old_ancestor_ids = #{foreign_key}.dup
 
               set_parent_id value
-              new_ancestor_ids = parent ? parent.#{foreign_key} + [parent.id] : []
+              new_ancestor_ids = #{parent_name} ? #{parent_name}.#{foreign_key} + [#{parent_name}.id] : []
 
               descendents.each do |descendent|
                 ary = descendent.#{foreign_key}.dup
@@ -114,13 +129,13 @@ module Mongoid::SleepingKingStudios
 
             def rebuild_ancestry!
               ary, object = [], self
-              while object.parent
-                ary.unshift object.parent.id
-                object = object.parent
+              while object.#{parent_name}
+                ary.unshift object.#{parent_name}.id
+                object = object.#{parent_name}
               end # while
               self.send :#{foreign_key}=, ary
             rescue Mongoid::Errors::DocumentNotFound
-              raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{relation_name}", object.parent_id
+              raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{relation_name}", object.#{parent_name}_id
             end # method rebuild_ancestry!
 
             def validate_ancestry!
@@ -132,10 +147,10 @@ module Mongoid::SleepingKingStudios
                   ancestor = self.class.find(ancestor_id)
                   ancestors << ancestor
 
-                  if index > 0 && ancestor.parent_id != #{foreign_key}[index - 1]
+                  if index > 0 && ancestor.#{parent_name}_id != #{foreign_key}[index - 1]
                     # If the ancestor's parent is not the same as the previous
                     # ancestor.
-                    raise Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor.new "#{relation_name}", ancestor.parent_id, #{foreign_key}[index - 1]
+                    raise Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor.new "#{relation_name}", ancestor.#{parent_name}_id, #{foreign_key}[index - 1]
                   end # if
                 rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
                   # If the ancestor id is nil, or the ancestor does not exist.
