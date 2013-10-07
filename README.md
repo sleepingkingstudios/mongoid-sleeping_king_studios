@@ -67,7 +67,9 @@ You can customize the ancestry cache by passing in a hash of options as the
       has_tree :cache_ancestry => { :relation_name => :assemblies }
     end # class
 
-- _relation\_name_: The name of the generated relation for the array of
+- *foreign\_key*: The name of the field used to store the ancestor references.
+  Defaults to 'ancestor_ids'.
+- *relation\_name*: The name of the generated relation for the array of
   parent objects. Defaults to 'ancestors'.
 
 **Warning:** Using this option will make many write operations much, much
