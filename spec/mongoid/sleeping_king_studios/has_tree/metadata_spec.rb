@@ -115,6 +115,21 @@ describe Mongoid::SleepingKingStudios::HasTree::Metadata do
     end # describe
   end # describe
 
+  describe '#foreign_key' do
+    specify { expect(instance).to respond_to(:foreign_key).with(0).arguments }
+    specify { expect(instance.foreign_key).to be == :parent_id }
+
+    describe '#[]' do
+      let(:value) { :value }
+
+      specify 'changes value' do
+        expect {
+          instance.parent[:relation_name] = value
+        }.to change(instance, :foreign_key).to(:"#{value}_id")
+      end # specify
+    end # describe
+  end # describe
+
   describe '#parent' do
     specify { expect(instance).to respond_to(:parent).with(0).arguments }
     specify { expect(instance.parent).to be_a Mongoid::SleepingKingStudios::HasTree::Parent::Metadata }

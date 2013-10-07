@@ -102,6 +102,10 @@ module Mongoid::SleepingKingStudios
       base.send :define_method, :root? do
         send(metadata.parent.relation_name).nil?
       end # method root?
+
+      base.send :define_method, :siblings do
+        self.class.where(:id => { "$ne" => self.id }).where(metadata.foreign_key => self.send(metadata.foreign_key))
+      end # method siblings
     end # class method define_helpers
 
     # @api private
@@ -204,5 +208,11 @@ module Mongoid::SleepingKingStudios
     #   Returns true if the object is a root object, e.g. has no parent object.
     # 
     #   @return [Boolean] True if the object has no parent; otherwise false.
+
+    # @!method siblings
+    #   Returns a Criteria specifying all persisted objects in the tree whose
+    #   parent is the current object's parent, excluding the current object.
+    # 
+    #   @return [Mongoid::Criteria]
   end # module
 end # module

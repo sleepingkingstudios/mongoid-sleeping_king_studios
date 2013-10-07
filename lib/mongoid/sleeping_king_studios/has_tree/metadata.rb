@@ -46,6 +46,13 @@ module Mongoid::SleepingKingStudios
         self[:children]
       end # method children
 
+      # The foreign key for the parent relation.
+      # 
+      # @return [Symbol] The foreign key.
+      def foreign_key
+        self[:foreign_key] || :"#{parent.relation_name}_id"
+      end # method foreign_key
+
       # The metadata associated with the #parent relation.
       # 
       # @return [Metadata] The parent metadata.

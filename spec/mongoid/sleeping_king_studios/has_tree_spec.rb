@@ -171,6 +171,27 @@ describe Mongoid::SleepingKingStudios::HasTree do
         end # specify
       end # context
     end # describe
+
+    describe '#siblings' do
+      specify { expect(instance).to respond_to(:siblings).with(0).arguments }
+      specify { expect(instance.siblings).to be_a Mongoid::Criteria }
+      specify { expect(instance.siblings.to_a).to be == [] }
+
+      before(:each) { instance.save! }
+
+      context 'with many siblings' do
+        let(:parent) { described_class.create! }
+        let(:siblings) do
+          [*0..2].map { described_class.create! parent_name => parent }
+        end # let
+
+        specify 'sets the siblings' do
+          expect {
+            instance.send :"#{parent_name}=", parent
+          }.to change { instance.siblings.to_a }.to siblings
+        end # specify
+      end # context
+    end # describe
   end # shared examples
 
   describe '::valid_options' do
