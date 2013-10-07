@@ -64,8 +64,8 @@ module Mongoid::SleepingKingStudios
       define_helpers   base, meta
 
       if meta.cache_ancestry?
-        base.send :include, Mongoid::SleepingKingStudios::HasTree::CacheAncestry
-        base.send :cache_ancestry, **options
+        concern = Mongoid::SleepingKingStudios::HasTree::CacheAncestry
+        concern.send :apply, base, meta.cache_ancestry
       end # if
     end # class method apply
 

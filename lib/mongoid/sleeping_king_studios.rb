@@ -14,4 +14,4 @@ module Mongoid
 end # module
 
 ### Require Extensions ###
-Dir[File.join Mongoid::SleepingKingStudios.root, *%w(ext ** *.rb)].each { |f| puts require f }
+Dir[File.join Mongoid::SleepingKingStudios.root, *%w(ext ** *.rb)].each { |f| require f }

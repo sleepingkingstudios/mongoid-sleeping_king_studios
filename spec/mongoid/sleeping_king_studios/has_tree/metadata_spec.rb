@@ -38,13 +38,35 @@ describe Mongoid::SleepingKingStudios::HasTree::Metadata do
       describe '#cache_ancestry' do
         let(:metadata) { instance.cache_ancestry }
 
-        specify { expect(metadata).to be_a Mongoid::SleepingKingStudios::Concern::Metadata }
+        specify { expect(metadata).to be_a Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Metadata }
+        specify { expect(metadata.children_name).to be :children }
+        specify { expect(metadata.parent_name).to   be :parent }
         specify { expect(metadata.name).to be :cache_ancestry }
       end # describe
+
+      context 'with parent and children relation names' do
+        let(:children_name) { :subcomponents }
+        let(:parent_name)   { :assemblies }
+        let(:properties) do
+          super().merge :children => { :relation_name => children_name }, :parent => { :relation_name => parent_name }
+        end # let
+        let(:metadata) { instance.cache_ancestry }
+
+        specify { expect(metadata.children_name).to be children_name }
+        specify { expect(metadata.parent_name).to   be parent_name }
+      end # context
     end # context
 
     context 'with cache_ancestry options' do
-      pending
+      let(:relation_name) { :assemblies }
+      let(:properties) { { :cache_ancestry => { :key => :value, :relation_name => relation_name } } }
+
+      describe '#cache_ancestry' do
+        let(:metadata) { instance.cache_ancestry }
+        
+        specify { expect(metadata.relation_name).to be == relation_name }
+        specify { expect(metadata[:key]).to be :value }
+      end # describe
     end # context
   end # describe
 

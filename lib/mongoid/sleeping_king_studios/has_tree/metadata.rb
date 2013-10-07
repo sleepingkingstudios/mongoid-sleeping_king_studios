@@ -1,6 +1,7 @@
 # lib/mongoid/sleeping_king_studios/has_tree/metadata.rb
 
 require 'mongoid/sleeping_king_studios/concern/metadata'
+require 'mongoid/sleeping_king_studios/has_tree/cache_ancestry/metadata'
 require 'mongoid/sleeping_king_studios/has_tree/children/metadata'
 require 'mongoid/sleeping_king_studios/has_tree/parent/metadata'
 
@@ -18,7 +19,10 @@ module Mongoid::SleepingKingStudios
 
         if properties.fetch(:cache_ancestry, false)
           properties[:cache_ancestry] = {} unless Hash === properties[:cache_ancestry]
-          self[:cache_ancestry] = characterize :cache_ancestry, properties[:cache_ancestry]
+          properties[:cache_ancestry][:children_name] = children.relation_name
+          properties[:cache_ancestry][:parent_name]   = parent.relation_name
+          
+          self[:cache_ancestry] = characterize :cache_ancestry, properties[:cache_ancestry], HasTree::CacheAncestry::Metadata
         end # unless
       end # constructor
 

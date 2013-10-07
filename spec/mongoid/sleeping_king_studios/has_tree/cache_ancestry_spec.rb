@@ -372,21 +372,27 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
 
   describe '::valid_options' do
     specify { expect(concern).to respond_to(:valid_options).with(0).arguments }
+    specify { expect(concern.valid_options).to include(:foreign_key) }
     specify { expect(concern.valid_options).to include(:relation_name) }
   end # describe
 
   describe '::apply' do
     let(:namespace) { Mongoid::SleepingKingStudios::Support::Models }
     let(:described_class) do
-      klass = Class.new(namespace::Base)
+      klass = Class.new(namespace::Base) do
+        attr_accessor :parent, :children
+        attr_writer   :parent_id
+      end # class
       klass.send :include, concern
       klass
     end # let
+    let(:options)  { {} }
+    let(:metadata) { Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Metadata.new :name, options }
 
     context 'with valid options' do
       specify 'does not raise an error' do
         expect {
-          concern.send :apply, described_class, {}
+          concern.send :apply, described_class, metadata
         }.not_to raise_error
       end # specify
     end # context
@@ -396,7 +402,7 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
 
       specify 'raises an error' do
         expect {
-          concern.send :apply, described_class, options
+          concern.send :apply, described_class, metadata
         }.to raise_error Mongoid::Errors::InvalidOptions
       end # specify
     end # context
