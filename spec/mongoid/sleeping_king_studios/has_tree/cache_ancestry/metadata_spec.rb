@@ -39,6 +39,51 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Metadata do
     end # describe
   end # describe
 
+  describe '#field_name' do
+    specify { expect(instance).to respond_to(:field_name).with(0).arguments }
+    specify { expect(instance.field_name).to be == :id }
+
+    describe '#[]' do
+      let(:value) { :value }
+
+      specify 'changes value' do
+        expect {
+          instance[:field_name] = value
+        }.to change(instance, :field_name).to(value)
+      end # specify
+    end # describe
+  end # describe
+
+  describe '#field_name?' do
+    specify { expect(instance).to respond_to(:field_name?).with(0).arguments }
+    specify { expect(instance.field_name?).to be false }
+
+    describe '#[]' do
+      let(:value) { :value }
+
+      specify 'changes value' do
+        expect {
+          instance[:field_name] = value
+        }.to change(instance, :field_name?).to(true)
+      end # specify
+    end # describe
+  end # describe
+
+  describe '#field_writer' do
+    specify { expect(instance).to respond_to(:field_writer).with(0).arguments }
+    specify { expect(instance.field_writer).to be == :id= }
+
+    describe '#[]' do
+      let(:value) { :value }
+
+      specify 'changes value' do
+        expect {
+          instance[:field_name] = value
+        }.to change(instance, :field_writer).to(:"#{value}=")
+      end # specify
+    end # describe
+  end # describe
+
   describe '#foreign_key' do
     specify { expect(instance).to respond_to(:foreign_key).with(0).arguments }
     specify { expect(instance.foreign_key).to be == :ancestor_ids }
@@ -52,6 +97,15 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Metadata do
         }.to change(instance, :foreign_key).to(value)
       end # specify
     end # describe
+
+    context 'with a field name set' do
+      let(:field_name) { :name }
+      let(:properties) { super().merge :field_name => field_name }
+
+      specify 'uses the field name' do
+        expect(instance.foreign_key).to be == :"ancestor_#{field_name.to_s.pluralize}"
+      end # specify
+    end # context
 
     context 'with a relation name set' do
       let(:relation_name) { :assemblies }
@@ -71,6 +125,21 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Metadata do
         end # specify
       end # describe
     end # context
+  end # describe
+
+  describe '#foreign_key_writer' do
+    specify { expect(instance).to respond_to(:foreign_key_writer).with(0).arguments }
+    specify { expect(instance.foreign_key_writer).to be == :ancestor_ids= }
+
+    describe '#[]' do
+      let(:value) { :value }
+
+      specify 'changes value' do
+        expect {
+          instance[:foreign_key] = value
+        }.to change(instance, :foreign_key_writer).to(:"#{value}=")
+      end # specify
+    end # describe
   end # describe
 
   describe '#parent_foreign_key' do

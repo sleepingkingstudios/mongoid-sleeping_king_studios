@@ -2,7 +2,8 @@
 
 require 'mongoid/sleeping_king_studios'
 require 'mongoid/sleeping_king_studios/concern'
-require 'mongoid/sleeping_king_studios/has_tree/errors'
+require 'mongoid/sleeping_king_studios/has_tree/cache_ancestry/errors/missing_ancestor_error'
+require 'mongoid/sleeping_king_studios/has_tree/cache_ancestry/errors/unexpected_ancestor_error'
 
 module Mongoid::SleepingKingStudios
   module HasTree
@@ -51,41 +52,59 @@ module Mongoid::SleepingKingStudios
       # 
       # @since 0.6.0
       def self.define_accessors base, metadata
+        concern          = self
         parent_id_writer = base.instance_method metadata.parent_foreign_key_writer
+        field_writer     = base.instance_method metadata.field_writer
 
+        # Redefine the setter for the base field to update the foreign key as
+        # well. The default field is :id, but can be customized to refer to
+        # another field on the model.
+        base.re_define_method metadata.field_writer do |value|
+          old_ancestor_ids = send(metadata.foreign_key).dup
+
+          field_writer.bind(self).call value
+
+          new_ancestor_ids = (send(metadata.parent_name) ?
+            send(metadata.parent_name).send(metadata.foreign_key) :
+            []) + [send(metadata.field_name)]
+
+          send :"#{metadata.foreign_key}=", new_ancestor_ids
+        end # method
+
+        # Redefine the foreign key setter to update the descendents' foreign
+        # keys. What should actually be happening here is updating the
+        # current foreign key, but not the *persisted* foreign key local
+        # variable that I'm going to have to add.
         base.re_define_method metadata.parent_foreign_key_writer do |value|
           old_ancestor_ids = send(metadata.foreign_key).dup
 
           parent_id_writer.bind(self).call value
           new_ancestor_ids = send(metadata.parent_name) ?
-            send(metadata.parent_name).send(metadata.foreign_key) + [send(metadata.parent_name).id] :
+            send(metadata.parent_name).send(metadata.foreign_key) + [send(metadata.field_name)] :
             []
 
+          descendents = concern.build_ancestry_criteria base, metadata, old_ancestor_ids
+          descendents = descendents.where :id => { '$ne' => self.id }
           descendents.each do |descendent|
             ary = descendent.send(metadata.foreign_key).dup
-            ary[0..old_ancestor_ids.count] = new_ancestor_ids + [id]
+            ary[0...old_ancestor_ids.count] = new_ancestor_ids
             descendent.update_attributes metadata.foreign_key => ary
           end # each
           
           send :"#{metadata.foreign_key}=", new_ancestor_ids
         end # method
 
+        # Define the scope for ancestors of the current object.
         base.send :define_method, metadata.relation_name do
-          begin
-            self.class.find(send(metadata.foreign_key))
-          rescue Mongoid::Errors::DocumentNotFound, Mongoid::Errors::InvalidFind
-            raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new metadata.relation_name, send(metadata.foreign_key)
-          end # begin-rescue
+          return [] if (values = send(metadata.foreign_key)[0...-1]).blank?
+
+          concern.find_by_ancestry self.class, metadata, values
         end # method
 
+        # Define the scope for descendents of the current object.
         base.send :define_method, :descendents do
-          criteria = self.class.all
-
-          send(metadata.foreign_key).each_with_index do |ancestor_id, index|
-            criteria = criteria.where(:"#{metadata.foreign_key}.#{index}" => ancestor_id)
-          end # each
-
-          criteria.where(:"#{metadata.foreign_key}.#{send(metadata.foreign_key).count}" => id)
+          criteria = concern.build_ancestry_criteria base, metadata, send(metadata.foreign_key)
+          criteria.where :id => { '$ne' => self.id }
         end # method descendents
       end # class method define_fields
 
@@ -98,7 +117,7 @@ module Mongoid::SleepingKingStudios
       # 
       # @since 0.6.0
       def self.define_fields base, metadata
-        base.send :field, metadata.foreign_key, :type => Array, :default => []
+        base.send :field, metadata.foreign_key, :type => Array, :default => ->() { [send(metadata.field_name)] }
       end # class method define_fields
 
       # @api private
@@ -110,11 +129,12 @@ module Mongoid::SleepingKingStudios
       # 
       # @since 0.6.0
       def self.define_helpers base, metadata
+        concern = self
         base.send :define_method, :rebuild_ancestry! do
           begin
             ary, object = [], self
             while object.send(metadata.parent_name)
-              ary.unshift object.send(metadata.parent_name).id
+              ary.unshift object.send(metadata.parent_name).send(metadata.field_name)
               object = object.send(metadata.parent_name)
             end # while
             self.send :"#{metadata.foreign_key}=", ary
@@ -123,19 +143,25 @@ module Mongoid::SleepingKingStudios
           end # begin-rescue
         end # method rebuild_ancestry!
 
-        base.send :define_method, :validate_ancestry! do
-          return if send(metadata.foreign_key).empty?
-
+        base.send :define_method, :validate_ancestry do
           ancestors = []
-          send(metadata.foreign_key).each_with_index do |ancestor_id, index|
+          send(metadata.foreign_key)[0...-1].each_with_index do |ancestor_id, index|
             begin
-              ancestor = self.class.find(ancestor_id)
+              ancestor = concern.find_one_by_ancestry base, metadata, send(metadata.foreign_key)[0..index]
               ancestors << ancestor
 
-              if index > 0 && ancestor.send(metadata.parent_foreign_key) != send(metadata.foreign_key)[index - 1]
-                # If the ancestor's parent is not the same as the previous
-                # ancestor.
-                raise Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor.new "#{metadata.relation_name}", ancestor.send(metadata.parent_foreign_key), send(metadata.foreign_key)[index - 1]
+              if index == 0
+
+              else
+                if ancestor.send(metadata.parent_foreign_key).nil?
+                  # If the ancestor's parent is missing.
+                  raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, ancestors[index - 1].send(metadata.field_name)
+                elsif ancestor.send(metadata.parent_foreign_key) != ancestors[index - 1].send(:id)
+                  # If the ancestor's parent is not the same as the previous
+                  # ancestor.
+                  binding.pry if $BINDING_SLUG
+                  raise Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor.new "#{metadata.relation_name}", ancestor.send(metadata.parent_name).send(metadata.field_name), ancestors[index - 1].send(metadata.field_name)
+                end # if
               end # if
             rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
               # If the ancestor id is nil, or the ancestor does not exist.
@@ -145,6 +171,59 @@ module Mongoid::SleepingKingStudios
         end # method validate_ancestry!
       end # class method define_helpers
 
+      def self.build_ancestry_criteria base, metadata, values, criteria = nil
+        criteria = base.all unless Mongoid::Criteria === criteria
+
+        values.each_with_index do |value, index|
+          criteria = criteria.where(:"#{metadata.foreign_key}.#{index}" => value)
+        end # each
+
+        criteria
+      end # class method build_ancestry_criteria
+
+      def self.find_one_by_ancestry base, metadata, values
+        if :id == metadata.field_name
+          base.find values.last
+        else
+          objects = base.where(metadata.foreign_key => values).to_a
+
+          # If there are no objects, then was unable to find object. If there
+          # is more than one object, then the foreign key is not unique.
+          if objects.count == 0
+            raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, values
+          elsif objects.count > 1
+            raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", values
+          end # if-elsif
+
+          objects.first
+        end # if-else
+      rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
+        # If the ancestor id is nil, or the ancestor does not exist.
+        raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name.to_s.singularize}", values
+      end # class method find_one_by_ancestry
+
+      def self.find_by_ancestry base, metadata, values
+        if :id == metadata.field_name
+          base.find values
+        else
+          folded = [*0...values.count].map do |index|
+            values[0..index]
+          end # map
+          objects = base.where(metadata.foreign_key => { '$in' => folded }).to_a
+
+          # If there are fewer objects than expected ancestors, then was unable
+          # to find one or more ancestors.
+          if objects.count < values.count
+            raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", values
+          end # if
+          
+          objects
+        end # if-else
+      rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
+        # If the ancestor id is nil, or the ancestor does not exist.
+        raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", values
+      end # class method find_by_ancestry
+
       # Get the valid options allowed with this concern.
       # 
       # @return [ Array<Symbol> ] The valid options.
@@ -152,9 +231,10 @@ module Mongoid::SleepingKingStudios
       # @since 0.5.1
       def self.valid_options
         %i(
-          children_name # Internal; do not set directly.
+          children_name
+          field_name
           foreign_key
-          parent_name   # Internal; do not set directly.
+          parent_name
           relation_name
         ) # end Array
       end # class method valid_options

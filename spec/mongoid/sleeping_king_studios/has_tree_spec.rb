@@ -188,7 +188,7 @@ describe Mongoid::SleepingKingStudios::HasTree do
         specify 'sets the siblings' do
           expect {
             instance.send :"#{parent_name}=", parent
-          }.to change { instance.siblings.to_a }.to siblings
+          }.to change { Set.new instance.siblings.to_a }.to Set.new(siblings)
         end # specify
       end # context
     end # describe
