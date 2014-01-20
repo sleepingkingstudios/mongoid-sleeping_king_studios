@@ -13,6 +13,7 @@ module Mongoid::SleepingKingStudios
       validate_options    name, options
       meta = characterize name, options, Metadata
       meta[:attribute] = attribute
+      meta.sort_params = { attribute => options[:descending] ? -1 : 1 }
 
       relate base, name, meta
 
@@ -36,13 +37,15 @@ module Mongoid::SleepingKingStudios
     def self.define_callbacks base, metadata
       base.after_save do
         if !send(metadata.attribute).nil? || metadata.order_nil?
-          criteria = base.all.order_by(metadata.attribute => (metadata.descending? ? :desc : :asc))
+          criteria = metadata.sort_criteria(base)
           unless metadata.order_nil?
             criteria = criteria.where(metadata.attribute.ne => nil)
           end # unless
           
           ordering    = criteria.to_a
           order_index = ordering.index(self)
+
+          # TODO: Handle removing yourself from the ordered subset!
           
           ordering[order_index..-1].each_with_index do |object, i|
             object.set(metadata.field_name => (order_index + i))

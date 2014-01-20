@@ -3,6 +3,7 @@
 require 'mongoid/sleeping_king_studios/spec_helper'
 
 require 'mongoid/sleeping_king_studios/orderable/metadata'
+require 'mongoid/sleeping_king_studios/support/models/base'
 
 RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   let(:name)       { :orderable }
@@ -139,6 +140,84 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
           instance[:order_nil?] = value
         }.to change(instance, :order_nil?).to(true)
       end # it
+    end # describe
+  end # describe
+
+  describe '#sort_criteria' do
+    let(:base) { Mongoid::SleepingKingStudios::Support::Models::Base }
+
+    it { expect(instance).to respond_to(:sort_criteria).with(1).arguments }
+    it { expect(instance.sort_criteria base).to be_a Mongoid::Criteria }
+
+    describe 'with sort params' do
+      let(:value) { :field_name.desc }
+
+      it 'changes the selector' do
+        expect {
+          instance.sort_params = value
+        }.to change {
+          instance.sort_criteria(base).options
+        }.to(:sort => { "field_name" => -1 })
+      end # it
+    end # describe
+  end # describe
+
+  describe '#sort_params' do
+    it { expect(instance).to respond_to(:sort_params).with(0).arguments }
+    it { expect(instance.sort_params).to be nil }
+
+    describe '#sort_params=' do
+      it { expect(instance).to respond_to(:sort_params=).with(1).arguments }
+
+      context 'with a symbol' do
+        let(:value) { :field_name }
+
+        it 'changes the value' do
+          expect {
+            instance.sort_params = value
+          }.to change(instance, :sort_params).to({ value => 1 })
+        end # it
+      end # context
+
+      context 'with a symbol and a direction' do
+        let(:value) { :field_name }
+
+        it 'changes the value' do
+          expect {
+            instance.sort_params = value.desc
+          }.to change(instance, :sort_params).to({ value => -1 })
+        end # it
+      end # context
+
+      context 'with a hash' do
+        let(:value) { { :field_name => :desc } }
+
+        it 'changes the value' do
+          expect {
+            instance.sort_params = value
+          }.to change(instance, :sort_params).to({ value.keys.first => -1 })
+        end # it
+      end # context
+
+      context 'with an array of symbols' do
+        let(:values) { [:first_field, :second_field] }
+
+        it 'changes the value' do
+          expect {
+            instance.sort_params = values
+          }.to change(instance, :sort_params).to({ values[0] => 1, values[1] => 1 })
+        end # it
+      end # context
+
+      context 'with a heterogenous array' do
+        let(:values) { [:first_field, :second_field.desc] }
+
+        it 'changes the value' do
+          expect {
+            instance.sort_params = values
+          }.to change(instance, :sort_params).to({ values[0] => 1, values[1].name => -1 })
+        end # it        
+      end # context
     end # describe
   end # describe
 end # describe
