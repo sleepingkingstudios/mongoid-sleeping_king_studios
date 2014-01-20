@@ -171,4 +171,40 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       end # shared behavior
     end # context
   end # describe
+
+  describe '::reorder' do
+    let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::Word }
+
+    it { expect(described_class).to respond_to(:reorder_alphabetical!).with(0).arguments }
+
+    context 'with a scrambled set' do
+      let(:instances) do
+        ([nil] + %w(whiskey tango foxtrot) + [nil]).map do |letters|
+          described_class.new(:letters => letters).tap &:save
+        end # each
+      end # let
+      let(:whiskey) { instances.select { |word| word.letters == 'whiskey' }.first }
+      let(:tango)   { instances.select { |word| word.letters == 'tango'   }.first }
+      let(:foxtrot) { instances.select { |word| word.letters == 'foxtrot' }.first }
+
+      before(:each) do
+        instances.first.set(:alphabetical_order => 2)
+        tango.set(:alphabetical_order => nil)
+        foxtrot.set(:alphabetical_order => -1)
+
+        instances.map &:reload
+      end # before each
+
+      it 'corrects the order' do
+        described_class.reorder_alphabetical!
+        instances.map &:reload
+
+        expect(instances.first.alphabetical_order).to be nil
+        expect(whiskey.alphabetical_order).to be == 2
+        expect(tango.alphabetical_order).to be   == 1
+        expect(foxtrot.alphabetical_order).to be == 0
+        expect(instances.last.alphabetical_order).to be nil
+      end # it
+    end # context
+  end # describe
 end # describe

@@ -18,6 +18,7 @@ module Mongoid::SleepingKingStudios
 
       define_fields    base, meta
       define_callbacks base, meta
+      define_helpers   base, meta
     end # module method apply
 
     # @api private
@@ -35,8 +36,7 @@ module Mongoid::SleepingKingStudios
 
     def self.define_callbacks base, metadata
       base.after_save do
-        criteria = metadata.sort_criteria(base)
-        
+        criteria    = metadata.sort_criteria(base)
         ordering    = criteria.to_a
         order_index = ordering.index(self)
 
@@ -49,15 +49,38 @@ module Mongoid::SleepingKingStudios
             # then start looping through the ordered collection at the old
             # value.
             order_index = send(metadata.field_was)
-            set(metadata.field_name => nil)
+
+            # Update the current instance.
+            self[metadata.field_name] = nil
+
+            # Set the value in the datastore.
+            set(metadata.field_name => order_index)
           end # unless
+        else
+          # Update the current instance.
+          self[metadata.field_name] = order_index
         end # if
 
         ordering[order_index..-1].each_with_index do |object, i|
           object.set(metadata.field_name => (order_index + i))
         end # each
       end # callback
-    end # module
+    end # module method define_callbacks
+
+    def self.define_helpers base, metadata
+      name = :"reorder_#{metadata.field_name.to_s.gsub(/_order\z/,'')}!"
+      meta = class << base; self; end
+      meta.send :define_method, name do
+        base.update_all(metadata.field_name => nil)
+        
+        criteria = metadata.sort_criteria(base)
+        ordering = criteria.to_a
+
+        ordering.each_with_index do |record, index|
+          record.set(metadata.field_name => index)
+        end # each
+      end # method
+    end # module method define_helpers
 
     # Returns a list of options that are valid for this concern.
     # 
