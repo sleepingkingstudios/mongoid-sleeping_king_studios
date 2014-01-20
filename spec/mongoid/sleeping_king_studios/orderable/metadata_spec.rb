@@ -6,7 +6,7 @@ require 'mongoid/sleeping_king_studios/orderable/metadata'
 
 RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   let(:name)       { :orderable }
-  let(:attribute)  { :order }
+  let(:attribute)  { :value }
   let(:properties) { { :attribute => attribute } }
   let(:instance)   { described_class.new name, properties }
 
@@ -62,6 +62,15 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
       end # it
     end # describe
 
+    context 'with :as option' do
+      let(:value)      { :chaos }
+      let(:properties) { super().merge :as => value }
+
+      it 'returns the value' do
+        expect(instance.field_name).to be == value
+      end # it
+    end # context
+
     context 'with a String value' do
       let(:value) { 'custom_order' }
 
@@ -99,6 +108,21 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         expect {
           instance[:field_name] = value
         }.to change(instance, :field_writer).to(:"#{value}=")
+      end # it
+    end # describe
+  end # describe
+
+  describe '#order_nil?' do
+    it { expect(instance).to respond_to(:order_nil?).with(0).arguments }
+    it { expect(instance.order_nil?).to be false }
+
+    describe '#[]' do
+      let(:value) { true }
+
+      it 'changes the value' do
+        expect {
+          instance[:order_nil?] = value
+        }.to change(instance, :order_nil?).to(true)
       end # it
     end # describe
   end # describe

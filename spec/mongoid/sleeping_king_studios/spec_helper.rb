@@ -6,6 +6,7 @@ require 'rspec'
 require 'rspec/sleeping_king_studios'
 require 'factory_girl'
 require 'database_cleaner'
+require 'pry'
 
 ### Require Factories, Custom Matchers, &c ###
 Dir[File.join __dir__, *%w(support ** *.rb)].each { |f| require f }

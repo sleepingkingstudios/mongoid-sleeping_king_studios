@@ -3,6 +3,7 @@
 require 'mongoid/sleeping_king_studios/orderable/metadata'
 
 module Mongoid::SleepingKingStudios
+  # @since 0.7.0
   module Orderable
     extend ActiveSupport::Concern
     extend Mongoid::SleepingKingStudios::Concern
@@ -34,14 +35,31 @@ module Mongoid::SleepingKingStudios
 
     def self.define_callbacks base, metadata
       base.after_save do
-        ordering    = base.all.order_by(metadata.attribute => :asc).to_a
-        order_index = ordering.index(self)
-        
-        ordering[order_index..-1].each_with_index do |object, i|
-          object.set(metadata.field_name => (order_index + i))
-        end # ordering
+        if !send(metadata.attribute).nil? || metadata.order_nil?
+          criteria = base.all.order_by(metadata.attribute => :asc)
+          unless metadata.order_nil?
+            criteria = criteria.where(metadata.attribute.ne => nil)
+          end # unless
+          
+          ordering    = criteria.to_a
+          order_index = ordering.index(self)
+          
+          ordering[order_index..-1].each_with_index do |object, i|
+            object.set(metadata.field_name => (order_index + i))
+          end # each
+        end # if
       end # callback
     end # module
+
+    # Returns a list of options that are valid for this concern.
+    # 
+    # @return [Array<Symbol>] The list of valid options.
+    def self.valid_options
+      super + %i(
+        as
+        order_nil?
+      ) # end array
+    end # module method valid options
 
     module ClassMethods
       def cache_ordering attribute, **options
