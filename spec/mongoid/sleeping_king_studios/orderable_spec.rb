@@ -26,32 +26,21 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   end # shared examples
 
   shared_examples 'updates collection on save' do |name|
-    let(:value) { 9 }
     let(:loaded_meta)  { described_class.relations_sleeping_king_studios[relation_key] }
 
-    before(:each) do
-      [25, 16, 1, 4, 0].each do |value|
-        described_class.create! :value => value
-      end # each
-
-      instance.send :"#{loaded_meta.attribute}=", value
-    end # before each
-
     describe '#save' do
-      let(:last) { described_class.where(:value => 25).first }
-
       it 'sets the order on the instance' do
         expect {
           instance.save
           instance.reload
-        }.to change(instance, loaded_meta.field_name).to(3)
+        }.to change(instance, loaded_meta.field_name).to(ordered_index)
       end # it
 
       it 'sets the order on subsequent instances' do
         expect {
           instance.save
-          last.reload
-        }.to change(last, loaded_meta.field_name).to(5)
+          ordered_last.reload
+        }.to change(ordered_last, loaded_meta.field_name).to(ordered_count)
       end # it
     end # describe
   end # shared examples
@@ -90,7 +79,20 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       it_behaves_like 'defines the field', :value_order
 
-      it_behaves_like 'updates collection on save', :value_order
+      it_behaves_like 'updates collection on save', :value_order do
+        let(:value)         { 9 }
+        let(:ordered_index) { 3 }
+        let(:ordered_count) { 5 }
+        let(:ordered_last)  { described_class.where(:value => 25).first }
+
+        before(:each) do
+          [25, 16, 1, 4, 0].each do |value|
+            described_class.create! :value => value
+          end # each
+
+          instance.send :"#{loaded_meta.attribute}=", value
+        end # before each
+      end # shared behavior
     end # context
   end # describe
 end # describe
