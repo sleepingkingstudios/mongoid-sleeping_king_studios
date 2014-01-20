@@ -13,21 +13,6 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     described_class.new name, properties
   end # let
 
-  describe '#descending?' do
-    it { expect(instance).to respond_to(:descending?).with(0).arguments }
-    it { expect(instance.descending?).to be false }
-
-    describe '#[]' do
-      let(:value) { true }
-
-      it 'changes the value' do
-        expect {
-          instance[:descending] = value
-        }.to change(instance, :descending?).to(true)
-      end # it
-    end # describe
-  end # describe
-
   describe '#field_name' do
     it { expect(instance).to respond_to(:field_name).with(0).arguments }
     it { expect(instance.field_name).to be == :placeholder_asc_order }
@@ -157,10 +142,52 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   end # describe
 
   describe '#sort_criteria' do
-    let(:base) { Mongoid::SleepingKingStudios::Support::Models::Base }
+    let(:base)         { Mongoid::SleepingKingStudios::Support::Models::Base }
+    let(:criteria)     { instance.sort_criteria(base.all) }
+    let(:sort_options) { criteria.options[:sort] }
 
     it { expect(instance).to respond_to(:sort_criteria).with(1).arguments }
     it { expect(instance.sort_criteria base.all).to be_a Mongoid::Criteria }
+
+    context 'with a symbol' do
+      let(:sort_params) { :field_name }
+
+      it 'sets the value' do
+        expect(sort_options).to be == { sort_params.to_s => 1 }
+      end # it
+    end # context
+
+    context 'with a symbol and a direction' do
+      let(:sort_params) { :field_name.desc }
+
+      it 'sets the value' do
+        expect(sort_options).to be == { sort_params.name.to_s => -1 }
+      end # it
+    end # context
+
+    context 'with a hash' do
+      let(:sort_params) { { :field_name => :desc } }
+
+      it 'sets the value' do
+        expect(sort_options).to be == { sort_params.keys.first.to_s => -1 }
+      end # it
+    end # context
+
+    context 'with an array of symbols' do
+      let(:sort_params) { [:first_field, :second_field] }
+
+      it 'sets the value' do
+        expect(sort_options).to be == { sort_params[0].to_s => 1, sort_params[1].to_s => 1 }
+      end # it
+    end # context
+
+    context 'with a heterogenous array' do
+      let(:sort_params) { [:first_field, :second_field.desc] }
+
+      it 'sets the value' do
+        expect(sort_options).to be == { sort_params[0].to_s => 1, sort_params[1].name.to_s => -1 }
+      end # it     
+    end # context
 
     describe 'with filter params' do
       let(:value) { { :value.ne => nil } }
@@ -173,58 +200,5 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         }.to({ "value" => { "$ne" => nil } })
       end # it
     end # describe
-
-    describe 'with sort params' do
-      let(:sort_params) { :field_name.desc }
-
-      it 'sets the options' do
-        expect(instance.sort_criteria(base.all).options).to be == { :sort => { "field_name" => -1 } }
-      end # it
-    end # describe
-  end # describe
-
-  describe '#sort_params' do
-    it { expect(instance).to respond_to(:sort_params).with(0).arguments }
-    it { expect(instance.sort_params).to be == { :placeholder => 1 } }
-
-    context 'with a symbol' do
-      let(:sort_params) { :field_name }
-
-      it 'sets the value' do
-        expect(instance.sort_params).to be == { sort_params => 1 }
-      end # it
-    end # context
-
-    context 'with a symbol and a direction' do
-      let(:sort_params) { :field_name.desc }
-
-      it 'sets the value' do
-        expect(instance.sort_params).to be == { sort_params.name => -1 }
-      end # it
-    end # context
-
-    context 'with a hash' do
-      let(:sort_params) { { :field_name => :desc } }
-
-      it 'sets the value' do
-        expect(instance.sort_params).to be == { sort_params.keys.first => -1 }
-      end # it
-    end # context
-
-    context 'with an array of symbols' do
-      let(:sort_params) { [:first_field, :second_field] }
-
-      it 'sets the value' do
-        expect(instance.sort_params).to be == { sort_params[0] => 1, sort_params[1] => 1 }
-      end # it
-    end # context
-
-    context 'with a heterogenous array' do
-      let(:sort_params) { [:first_field, :second_field.desc] }
-
-      it 'sets the value' do
-        expect(instance.sort_params).to be == { sort_params[0] => 1, sort_params[1].name => -1 }
-      end # it     
-    end # context
   end # describe
 end # describe

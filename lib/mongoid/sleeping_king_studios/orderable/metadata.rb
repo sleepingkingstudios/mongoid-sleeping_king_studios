@@ -11,7 +11,7 @@ module Mongoid::SleepingKingStudios
       def initialize name, properties = {}
         super
 
-        self[:sort_params] = case sort_params
+        self[:sort_params] = case properties[:sort_params]
         when Array
           properties[:sort_params].reduce({}) do |hsh, param|
             hsh.merge parse_sort_param(param)
@@ -24,11 +24,6 @@ module Mongoid::SleepingKingStudios
           parse_sort_param(properties[:sort_params])
         end # case
       end # method initialize
-
-      # @return [Boolean] True if the sort is descending; otherwise false.
-      def descending?
-        !!self[:descending]
-      end # method descending?
 
       # The name of the field used to store the order.
       #
@@ -86,29 +81,13 @@ module Mongoid::SleepingKingStudios
       # 
       # @return [Mongoid::Criteria]
       def sort_criteria criteria
-        filter_criteria(criteria).order_by(sort_params)
+        filter_criteria(criteria).order_by(self[:sort_params])
       end # method sort_criteria
-
-      # The options to be passed into Criteria#sort when determining the order
-      # of the collection items.
-      #
-      # @return [Hash<Symbol, Integer>] Hash, with field names as keys and
-      #   values of 1 or -1 for ascending and descendings sorts, respectively.
-      def sort_params
-        self[:sort_params]
-      end # method sort_params
-
-      # Parses and sets the sort params.
-      # 
-      # @param [Object] params The options to generate the sort params.
-      def sort_params= params
-        
-      end # method sort_params=
 
       private
 
       def default_field_name
-        sort_params.map { |key, value|
+        self[:sort_params].map { |key, value|
           "#{key}_#{value == 1 ? 'asc' : 'desc'}"
         }.join('_') + '_order'
       end # method default_field_name

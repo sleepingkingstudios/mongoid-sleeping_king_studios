@@ -13,7 +13,6 @@ module Mongoid::SleepingKingStudios
       validate_options    name, options
       options.update :sort_params => sort_params
       meta = characterize name, options, Metadata
-      meta.sort_params  = sort_params
 
       relate base, name, meta
 
