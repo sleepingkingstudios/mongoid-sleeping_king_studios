@@ -214,5 +214,7 @@ module Mongoid::SleepingKingStudios
     #   parent is the current object's parent, excluding the current object.
     # 
     #   @return [Mongoid::Criteria]
+    # 
+    #   @since 0.6.1
   end # module
 end # module

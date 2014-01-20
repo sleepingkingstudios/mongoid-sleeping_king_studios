@@ -107,5 +107,5 @@ base attribute, set :slug_lock to false.
 
 ## License
 
-RSpec::SleepingKingStudios is released under the
+Mongoid::SleepingKingStudios is released under the
 [MIT License](http://www.opensource.org/licenses/MIT).
