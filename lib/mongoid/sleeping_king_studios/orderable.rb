@@ -36,21 +36,27 @@ module Mongoid::SleepingKingStudios
 
     def self.define_callbacks base, metadata
       base.after_save do
-        if !send(metadata.attribute).nil? || metadata.order_nil?
-          criteria = metadata.sort_criteria(base)
-          unless metadata.order_nil?
-            criteria = criteria.where(metadata.attribute.ne => nil)
-          end # unless
-          
-          ordering    = criteria.to_a
-          order_index = ordering.index(self)
+        criteria = metadata.sort_criteria(base)
+        
+        ordering    = criteria.to_a
+        order_index = ordering.index(self)
 
-          # TODO: Handle removing yourself from the ordered subset!
-          
-          ordering[order_index..-1].each_with_index do |object, i|
-            object.set(metadata.field_name => (order_index + i))
-          end # each
+        if order_index.nil?
+          if send(metadata.field_was).nil?
+            # Both the old and new values are nil, so mission accomplished.
+            return
+          else
+            # The old value wasn't nil, so remember it and set the new value,
+            # then start looping through the ordered collection at the old
+            # value.
+            order_index = send(metadata.field_was)
+            set(metadata.field_name => nil)
+          end # unless
         end # if
+
+        ordering[order_index..-1].each_with_index do |object, i|
+          object.set(metadata.field_name => (order_index + i))
+        end # each
       end # callback
     end # module
 
@@ -61,7 +67,7 @@ module Mongoid::SleepingKingStudios
       super + %i(
         as
         descending
-        order_nil?
+        filter
       ) # end array
     end # module method valid options
 

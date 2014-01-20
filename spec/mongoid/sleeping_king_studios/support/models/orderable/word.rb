@@ -8,6 +8,7 @@ module Mongoid::SleepingKingStudios::Support::Models::Orderable
 
     field :letters, :type => String
 
-    cache_ordering :letters, :as => :alphabetical_order
+    cache_ordering :letters, :as => :alphabetical_order,
+      :filter => { :letters.ne => nil }
   end # class
 end # module

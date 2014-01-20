@@ -6,12 +6,6 @@ module Mongoid::SleepingKingStudios
   module Orderable
     # Stores information about an Orderable concern.
     class Metadata < Mongoid::SleepingKingStudios::Concern::Metadata
-      def initialize name, properties = {}
-        super
-
-        self[:field_name] = properties[:as] if properties.has_key?(:as)
-      end # constructor
-
       # The name of the attribute used to determine the order.
       # 
       # @return [Symbol] The attribute name.
@@ -33,14 +27,21 @@ module Mongoid::SleepingKingStudios
       #
       # @return [Symbol] The field name.
       def field_name
-        fetch(:field_name, "#{attribute}_order").intern
+        fetch(:as, "#{attribute}_order").intern
       end # method field_name
 
       # @return [Boolean] True if a custom field name is defined; otherwise
       # false.
       def field_name?
-        !!self[:field_name]
+        !!self[:as]
       end # method field_name
+
+      # The name of the dirty tracking method for the order field.
+      # 
+      # @return [Symbol] The method name.
+      def field_was
+        :"#{field_name}_was"
+      end # method field_was
 
       # The name of the writer for the order field.
       # 
@@ -49,16 +50,36 @@ module Mongoid::SleepingKingStudios
         :"#{field_name}="
       end # method field_writer
 
-      # @return [Boolean] True if nil values are ordered; otherwise false;
-      def order_nil?
-        !!self[:order_nil?]
-      end # method order_nil?
+      # The criteria to filter only the desired collection items to sort.
+      # 
+      # @param [Mongoid::Criteria] criteria The base criteria to modify using
+      #   the filter params.
+      # 
+      # @return [Mongoid::Criteria]
+      def filter_criteria criteria
+        filter_params? ? criteria.where(filter_params) : criteria
+      end # method filter_criteria
+
+      # The options (if any) to filter the collection by prior to sorting.
+      # 
+      # @return [Hash]
+      def filter_params
+        self[:filter]
+      end # method filter_params
+
+      # @return [Boolean] True if filter params are defined; otherwise false.
+      def filter_params?
+        !!self[:filter]
+      end # method filter_params?
 
       # The criteria to be used when sorting the collection.
       # 
+      # @param [Mongoid::Criteria] criteria The base criteria to modify using
+      #   the sort params.
+      # 
       # @return [Mongoid::Criteria]
-      def sort_criteria base
-        base.all.order_by(sort_params)
+      def sort_criteria criteria
+        filter_criteria(criteria).order_by(sort_params)
       end # method sort_criteria
 
       # The options to be passed into Criteria#sort when determining the order

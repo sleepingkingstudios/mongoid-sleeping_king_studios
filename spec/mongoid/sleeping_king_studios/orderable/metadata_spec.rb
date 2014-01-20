@@ -73,7 +73,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
 
       it 'changes the value' do
         expect {
-          instance[:field_name] = value
+          instance[:as] = value
         }.to change(instance, :field_name).to(value)
       end # it
     end # describe
@@ -90,7 +90,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     context 'with a String value' do
       let(:value) { 'custom_order' }
 
-      before(:each) { instance[:field_name] = value }
+      before(:each) { instance[:as] = value }
 
       it 'returns a Symbol' do
         expect(instance.field_name).to be == value.intern
@@ -107,9 +107,24 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
 
       it 'changes the value' do
         expect {
-          instance[:field_name] = value
+          instance[:as] = value
         }.to change(instance, :field_name?).to(true)
       end # describe
+    end # describe
+  end # describe
+
+  describe '#field_was' do
+    it { expect(instance).to respond_to(:field_was).with(0).arguments }
+    it { expect(instance.field_was).to be == :"#{attribute}_order_was" }
+
+    describe '#[]' do
+      let(:value) { :custom_order }
+
+      it 'changes the value' do
+        expect {
+          instance[:as] = value
+        }.to change(instance, :field_was).to(:"#{value}_was")
+      end # it
     end # describe
   end # describe
 
@@ -122,23 +137,57 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
 
       it 'changes the value' do
         expect {
-          instance[:field_name] = value
+          instance[:as] = value
         }.to change(instance, :field_writer).to(:"#{value}=")
       end # it
     end # describe
   end # describe
 
-  describe '#order_nil?' do
-    it { expect(instance).to respond_to(:order_nil?).with(0).arguments }
-    it { expect(instance.order_nil?).to be false }
+  describe '#filter_criteria' do
+    let(:base) { Mongoid::SleepingKingStudios::Support::Models::Base }
 
-    describe '#[]' do
-      let(:value) { true }
+    it { expect(instance).to respond_to(:filter_criteria).with(1).arguments }
+    it { expect(instance.filter_criteria base.all).to be_a Mongoid::Criteria }
+
+    describe 'with filter params' do
+      let(:value) { { :value.ne => nil } }
 
       it 'changes the value' do
         expect {
-          instance[:order_nil?] = value
-        }.to change(instance, :order_nil?).to(true)
+          instance[:filter] = value
+        }.to change {
+          instance.filter_criteria(base.all).selector
+        }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
+  end # describe
+
+  describe '#filter_params' do
+    it { expect(instance).to respond_to(:filter_params).with(0).arguments }
+    it { expect(instance.filter_params).to be nil }
+
+    describe '#[]' do
+      let(:value) { { :value.ne => nil } }
+
+      it 'changes the value' do
+        expect {
+          instance[:filter] = value
+        }.to change(instance, :filter_params).to(value)
+      end # it
+    end # describe
+  end # describe
+
+  describe '#filter_params?' do
+    it { expect(instance).to respond_to(:filter_params?).with(0).arguments }
+    it { expect(instance.filter_params?).to be false }
+
+    describe '#[]' do
+      let(:value) { { :value.ne => nil } }
+
+      it 'changes the value' do
+        expect {
+          instance[:filter] = value
+        }.to change(instance, :filter_params?).to(true)
       end # it
     end # describe
   end # describe
@@ -147,7 +196,19 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     let(:base) { Mongoid::SleepingKingStudios::Support::Models::Base }
 
     it { expect(instance).to respond_to(:sort_criteria).with(1).arguments }
-    it { expect(instance.sort_criteria base).to be_a Mongoid::Criteria }
+    it { expect(instance.sort_criteria base.all).to be_a Mongoid::Criteria }
+
+    describe 'with filter params' do
+      let(:value) { { :value.ne => nil } }
+
+      it 'changes the value' do
+        expect {
+          instance[:filter] = value
+        }.to change {
+          instance.sort_criteria(base.all).selector
+        }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
 
     describe 'with sort params' do
       let(:value) { :field_name.desc }
@@ -156,7 +217,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         expect {
           instance.sort_params = value
         }.to change {
-          instance.sort_criteria(base).options
+          instance.sort_criteria(base.all).options
         }.to(:sort => { "field_name" => -1 })
       end # it
     end # describe

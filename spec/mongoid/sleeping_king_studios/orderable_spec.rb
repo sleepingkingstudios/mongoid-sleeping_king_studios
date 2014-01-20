@@ -49,7 +49,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     it { expect(concern).to respond_to(:valid_options).with(0).arguments }
     it { expect(concern.valid_options).to include :as }
     it { expect(concern.valid_options).to include :descending }
-    it { expect(concern.valid_options).to include :order_nil? }
+    it { expect(concern.valid_options).to include :filter }
   end # describe
 
   describe '::cache_ordering' do
@@ -139,30 +139,6 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         before(:each) do
           ['foxtrot', nil, 'alpha', 'delta', nil, nil, 'charlie', 'echo'].each do |value|
             described_class.create! :letters => value
-          end # each
-
-          instance.send :"#{loaded_meta.attribute}=", value
-        end # before each
-      end # shared behavior
-    end # context
-
-    context 'with :date, :order_nil? => true' do
-      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::DateOrder }
-      let(:instance)        { described_class.new }
-
-      it_behaves_like 'sets the metadata'
-
-      it_behaves_like 'defines the field', :date_order
-
-      it_behaves_like 'updates collection on save', :date_order do
-        let(:value)         { 1.week.ago }
-        let(:ordered_index) { 4 }
-        let(:ordered_count) { 6 }
-        let(:ordered_last)  { described_class.all.sort(:date => :asc).last }
-
-        before(:each) do
-          [nil, DateTime.current, 2.days.ago, 1.year.ago, nil, nil].each do |value|
-            described_class.create! :date => value
           end # each
 
           instance.send :"#{loaded_meta.attribute}=", value
