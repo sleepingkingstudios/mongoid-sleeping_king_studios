@@ -48,7 +48,6 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   describe '::valid_options' do
     it { expect(concern).to respond_to(:valid_options).with(0).arguments }
     it { expect(concern.valid_options).to include :as }
-    it { expect(concern.valid_options).to include :descending }
     it { expect(concern.valid_options).to include :filter }
   end # describe
 
@@ -80,9 +79,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       it_behaves_like 'sets the metadata'
 
-      it_behaves_like 'defines the field', :value_order
+      it_behaves_like 'defines the field', :value_asc_order
 
-      it_behaves_like 'updates collection on save', :value_order do
+      it_behaves_like 'updates collection on save', :value_asc_order do
         let(:value)         { 9 }
         let(:ordered_index) { 3 }
         let(:ordered_count) { 5 }
@@ -93,20 +92,20 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             described_class.create! :value => value
           end # each
 
-          instance.send :"#{loaded_meta.attribute}=", value
+          instance.value = value
         end # before each
       end # shared behavior
     end # context
 
-    context 'with :value and :descending => true' do
+    context 'with :value.desc' do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ReverseCounter }
       let(:instance)        { described_class.new }
 
       it_behaves_like 'sets the metadata'
 
-      it_behaves_like 'defines the field', :value_order
+      it_behaves_like 'defines the field', :value_desc_order
 
-      it_behaves_like 'updates collection on save', :value_order do
+      it_behaves_like 'updates collection on save', :value_desc_order do
         let(:value)         { 9 }
         let(:ordered_index) { 2 }
         let(:ordered_count) { 5 }
@@ -117,7 +116,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             described_class.create! :value => value
           end # each
 
-          instance.send :"#{loaded_meta.attribute}=", value
+          instance.value = value
         end # before each
       end # shared behavior
     end # context
@@ -141,7 +140,33 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             described_class.create! :letters => value
           end # each
 
-          instance.send :"#{loaded_meta.attribute}=", value
+          instance.letters = value
+        end # before each
+      end # shared behavior
+    end # context
+
+    context 'with :primary, :secondary.desc' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::MultiOrder }
+      let(:instance)        { described_class.new }
+
+      it_behaves_like 'sets the metadata'
+
+      it_behaves_like 'defines the field', :primary_asc_secondary_desc_order
+
+      it_behaves_like 'updates collection on save', :primary_asc_secondary_desc_order do
+        let(:primary)       { 0 }
+        let(:secondary)     { 0 }
+        let(:ordered_index) { 1 }
+        let(:ordered_count) { 5 }
+        let(:ordered_last)  { described_class.where(:primary => 2, :secondary => 0).first }
+
+        before(:each) do
+          [[0,1],[1,0],[1,1],[2,0],[2,1]].each do |(primary, secondary)|
+            described_class.create! :primary => primary, :secondary => secondary
+          end # each
+
+          instance.primary   = primary
+          instance.secondary = secondary
         end # before each
       end # shared behavior
     end # context

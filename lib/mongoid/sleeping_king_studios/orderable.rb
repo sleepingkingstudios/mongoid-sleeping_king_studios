@@ -8,12 +8,12 @@ module Mongoid::SleepingKingStudios
     extend ActiveSupport::Concern
     extend Mongoid::SleepingKingStudios::Concern
 
-    def self.apply base, attribute, options
+    def self.apply base, sort_params, options
       name = :orderable
       validate_options    name, options
+      options.update :sort_params => sort_params
       meta = characterize name, options, Metadata
-      meta[:attribute] = attribute
-      meta.sort_params = { attribute => options[:descending] ? -1 : 1 }
+      meta.sort_params  = sort_params
 
       relate base, name, meta
 
@@ -66,15 +66,14 @@ module Mongoid::SleepingKingStudios
     def self.valid_options
       super + %i(
         as
-        descending
         filter
       ) # end array
     end # module method valid options
 
     module ClassMethods
-      def cache_ordering attribute, **options
+      def cache_ordering *sort_params, **options
         concern = Mongoid::SleepingKingStudios::Orderable
-        concern.apply self, attribute, options
+        concern.apply self, sort_params, options
       end # class method slugify
     end # module
   end # module

@@ -6,17 +6,24 @@ module Mongoid::SleepingKingStudios
   module Orderable
     # Stores information about an Orderable concern.
     class Metadata < Mongoid::SleepingKingStudios::Concern::Metadata
-      # The name of the attribute used to determine the order.
-      # 
-      # @return [Symbol] The attribute name.
-      def attribute
-        self[:attribute].to_s.intern
-      end # method attribute
+      # @param [Symbol, String] name The name of the concern or relation.
+      # @param [Hash] properties The properties of the concern or relation.
+      def initialize name, properties = {}
+        super
 
-      # @return [Boolean] True if the attribute is defined; otherwise false.
-      def attribute?
-        !!self[:attribute]
-      end # method attribute?
+        self[:sort_params] = case sort_params
+        when Array
+          properties[:sort_params].reduce({}) do |hsh, param|
+            hsh.merge parse_sort_param(param)
+          end # each
+        when Hash
+          properties[:sort_params].each.with_object({}) do |(key, value), hsh|
+            hsh[key] = parse_sort_direction(value)
+          end # each
+        when Symbol, Origin::Key
+          parse_sort_param(properties[:sort_params])
+        end # case
+      end # method initialize
 
       # @return [Boolean] True if the sort is descending; otherwise false.
       def descending?
@@ -27,7 +34,7 @@ module Mongoid::SleepingKingStudios
       #
       # @return [Symbol] The field name.
       def field_name
-        fetch(:as, "#{attribute}_order").intern
+        fetch(:as, default_field_name).intern
       end # method field_name
 
       # @return [Boolean] True if a custom field name is defined; otherwise
@@ -95,21 +102,16 @@ module Mongoid::SleepingKingStudios
       # 
       # @param [Object] params The options to generate the sort params.
       def sort_params= params
-        case params
-        when Array
-          self[:sort_params] = params.reduce({}) do |hsh, param|
-            hsh.merge parse_sort_param(param)
-          end # each
-        when Hash
-          self[:sort_params] = params.each.with_object({}) do |(key, value), hsh|
-            hsh[key] = parse_sort_direction(value)
-          end # each
-        when Symbol, Origin::Key
-          self[:sort_params] = parse_sort_param(params)
-        end # case
+        
       end # method sort_params=
 
       private
+
+      def default_field_name
+        sort_params.map { |key, value|
+          "#{key}_#{value == 1 ? 'asc' : 'desc'}"
+        }.join('_') + '_order'
+      end # method default_field_name
 
       def parse_sort_param param
         case param

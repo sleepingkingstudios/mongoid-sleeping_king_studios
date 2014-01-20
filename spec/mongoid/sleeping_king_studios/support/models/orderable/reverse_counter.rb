@@ -8,6 +8,6 @@ module Mongoid::SleepingKingStudios::Support::Models::Orderable
 
     field :value, :type => Integer
 
-    cache_ordering :value, :descending => true
+    cache_ordering :value.desc
   end # class
 end # module
