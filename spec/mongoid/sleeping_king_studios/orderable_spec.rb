@@ -48,6 +48,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   describe '::valid_options' do
     it { expect(concern).to respond_to(:valid_options).with(0).arguments }
     it { expect(concern.valid_options).to include :as }
+    it { expect(concern.valid_options).to include :descending }
     it { expect(concern.valid_options).to include :order_nil? }
   end # describe
 
@@ -86,6 +87,30 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         let(:ordered_index) { 3 }
         let(:ordered_count) { 5 }
         let(:ordered_last)  { described_class.where(:value => 25).first }
+
+        before(:each) do
+          [25, 16, 1, 4, 0].each do |value|
+            described_class.create! :value => value
+          end # each
+
+          instance.send :"#{loaded_meta.attribute}=", value
+        end # before each
+      end # shared behavior
+    end # context
+
+    context 'with :value and :descending => true' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ReverseCounter }
+      let(:instance)        { described_class.new }
+
+      it_behaves_like 'sets the metadata'
+
+      it_behaves_like 'defines the field', :value_order
+
+      it_behaves_like 'updates collection on save', :value_order do
+        let(:value)         { 9 }
+        let(:ordered_index) { 2 }
+        let(:ordered_count) { 5 }
+        let(:ordered_last)  { described_class.where(:value => 0).first }
 
         before(:each) do
           [25, 16, 1, 4, 0].each do |value|

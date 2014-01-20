@@ -48,6 +48,21 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     end # describe
   end # describe
 
+  describe '#descending?' do
+    it { expect(instance).to respond_to(:descending?).with(0).arguments }
+    it { expect(instance.descending?).to be false }
+
+    describe '#[]' do
+      let(:value) { true }
+
+      it 'changes the value' do
+        expect {
+          instance[:descending] = value
+        }.to change(instance, :descending?).to(true)
+      end # it
+    end # describe
+  end # describe
+
   describe '#field_name' do
     it { expect(instance).to respond_to(:field_name).with(0).arguments }
     it { expect(instance.field_name).to be == :"#{attribute}_order" }

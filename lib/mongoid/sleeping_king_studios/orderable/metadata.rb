@@ -24,6 +24,11 @@ module Mongoid::SleepingKingStudios
         !!self[:attribute]
       end # method attribute?
 
+      # @return [Boolean] True if the sort is descending; otherwise false.
+      def descending?
+        !!self[:descending]
+      end # method descending?
+
       # The name of the field used to store the order.
       #
       # @return [Symbol] The field name.

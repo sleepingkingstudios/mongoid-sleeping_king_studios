@@ -36,7 +36,7 @@ module Mongoid::SleepingKingStudios
     def self.define_callbacks base, metadata
       base.after_save do
         if !send(metadata.attribute).nil? || metadata.order_nil?
-          criteria = base.all.order_by(metadata.attribute => :asc)
+          criteria = base.all.order_by(metadata.attribute => (metadata.descending? ? :desc : :asc))
           unless metadata.order_nil?
             criteria = criteria.where(metadata.attribute.ne => nil)
           end # unless
@@ -57,6 +57,7 @@ module Mongoid::SleepingKingStudios
     def self.valid_options
       super + %i(
         as
+        descending
         order_nil?
       ) # end array
     end # module method valid options
