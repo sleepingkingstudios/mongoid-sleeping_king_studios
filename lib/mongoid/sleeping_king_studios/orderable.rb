@@ -106,7 +106,19 @@ module Mongoid::SleepingKingStudios
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_helpers base, metadata
-      name = :"reorder_#{metadata.field_name.to_s.gsub(/_order\z/,'')}!"
+      base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
+      
+      name = :"next_#{base_name}"
+      base.send :define_method, name do
+        base.order_by(metadata.field_name.asc).where(metadata.field_name.gt => send(metadata.field_name)).limit(1).first
+      end # method
+
+      name = :"prev_#{base_name}"
+      base.send :define_method, name do
+        base.order_by(metadata.field_name.desc).where(metadata.field_name.lt => send(metadata.field_name)).limit(1).first
+      end # method
+
+      name = :"reorder_#{base_name}!"
       meta = class << base; self; end
       meta.send :define_method, name do
         base.update_all(metadata.field_name => nil)

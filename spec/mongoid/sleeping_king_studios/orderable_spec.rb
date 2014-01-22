@@ -45,6 +45,21 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     end # describe
   end # shared examples
 
+  shared_examples 'creates helpers' do |name|
+    let(:next_name) { "next_#{name}".gsub(/_order\z/,'').intern }
+    let(:prev_name) { "prev_#{name}".gsub(/_order\z/,'').intern }
+
+    describe '#next_ordering_name' do
+      it { expect(instance).to respond_to(next_name).with(0).arguments }
+      it { expect(instance.send next_name).to be == next_record }
+    end # describe
+
+    describe '#prev_ordering_name' do
+      it { expect(instance).to respond_to(prev_name).with(0).arguments }
+      it { expect(instance.send prev_name).to be == prev_record }
+    end # describe
+  end # shared examples
+
   describe '::valid_options' do
     it { expect(concern).to respond_to(:valid_options).with(0).arguments }
     it { expect(concern.valid_options).to include :as }
@@ -81,11 +96,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       it_behaves_like 'defines the field', :value_asc_order
 
-      it_behaves_like 'updates collection on save', :value_asc_order do
-        let(:value)         { 9 }
-        let(:ordered_index) { 3 }
-        let(:ordered_count) { 5 }
-        let(:ordered_last)  { described_class.where(:value => 25).first }
+      context 'with created records' do
+        let(:value) { 9 }
 
         before(:each) do
           [25, 16, 1, 4, 0].each do |value|
@@ -94,7 +106,20 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
           instance.value = value
         end # before each
-      end # shared behavior
+
+        it_behaves_like 'updates collection on save', :value_asc_order do
+          let(:ordered_index) { 3 }
+          let(:ordered_count) { 5 }
+          let(:ordered_last)  { described_class.where(:value => 25).first }
+        end # shared behavior
+
+        it_behaves_like 'creates helpers', :value_asc_order do
+          let(:next_record) { described_class.where(:value => 16).first }
+          let(:prev_record) { described_class.where(:value => 4).first }
+
+          before(:each) { instance.save! }
+        end # shared behavior
+      end # context
     end # context
 
     context 'with :value.desc' do
@@ -105,11 +130,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       it_behaves_like 'defines the field', :value_desc_order
 
-      it_behaves_like 'updates collection on save', :value_desc_order do
-        let(:value)         { 9 }
-        let(:ordered_index) { 2 }
-        let(:ordered_count) { 5 }
-        let(:ordered_last)  { described_class.where(:value => 0).first }
+      context 'with created records' do
+        let(:value) { 9 }
 
         before(:each) do
           [25, 16, 1, 4, 0].each do |value|
@@ -118,7 +140,20 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
           instance.value = value
         end # before each
-      end # shared behavior
+
+        it_behaves_like 'updates collection on save', :value_desc_order do
+          let(:ordered_index) { 2 }
+          let(:ordered_count) { 5 }
+          let(:ordered_last)  { described_class.where(:value => 0).first }
+        end # shared behavior
+
+        it_behaves_like 'creates helpers', :value_desc_order do
+          let(:next_record) { described_class.where(:value => 4).first }
+          let(:prev_record) { described_class.where(:value => 16).first }
+
+          before(:each) { instance.save! }
+        end # shared behavior
+      end # context
     end # context
 
     context 'with :letters, :as => :alphabetical_order' do
@@ -129,11 +164,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       it_behaves_like 'defines the field', :alphabetical_order
 
-      it_behaves_like 'updates collection on save', :alphabetical_order do
-        let(:value)         { 'bravo' }
-        let(:ordered_index) { 1 }
-        let(:ordered_count) { 5 }
-        let(:ordered_last)  { described_class.where(:letters => 'foxtrot').first }
+      context 'with created records' do
+        let(:value) { 'bravo' }
 
         before(:each) do
           ['foxtrot', nil, 'alpha', 'delta', nil, nil, 'charlie', 'echo'].each do |value|
@@ -142,7 +174,20 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
           instance.letters = value
         end # before each
-      end # shared behavior
+
+        it_behaves_like 'updates collection on save', :alphabetical_order do
+          let(:ordered_index) { 1 }
+          let(:ordered_count) { 5 }
+          let(:ordered_last)  { described_class.where(:letters => 'foxtrot').first }
+        end # shared behavior
+
+        it_behaves_like 'creates helpers', :alphabetical_order do
+          let(:next_record) { described_class.where(:letters => 'charlie').first }
+          let(:prev_record) { described_class.where(:letters => 'alpha').first }
+
+          before(:each) { instance.save! }
+        end # shared behavior
+      end # context
     end # context
 
     context 'with :primary, :secondary.desc' do
@@ -153,12 +198,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       it_behaves_like 'defines the field', :primary_asc_secondary_desc_order
 
-      it_behaves_like 'updates collection on save', :primary_asc_secondary_desc_order do
-        let(:primary)       { 0 }
-        let(:secondary)     { 0 }
-        let(:ordered_index) { 1 }
-        let(:ordered_count) { 5 }
-        let(:ordered_last)  { described_class.where(:primary => 2, :secondary => 0).first }
+      context 'with created records' do
+        let(:primary)   { 0 }
+        let(:secondary) { 0 }
 
         before(:each) do
           [[0,1],[1,0],[1,1],[2,0],[2,1]].each do |(primary, secondary)|
@@ -168,7 +210,20 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           instance.primary   = primary
           instance.secondary = secondary
         end # before each
-      end # shared behavior
+
+        it_behaves_like 'updates collection on save', :primary_asc_secondary_desc_order do
+          let(:ordered_index) { 1 }
+          let(:ordered_count) { 5 }
+          let(:ordered_last)  { described_class.where(:primary => 2, :secondary => 0).first }
+        end # shared behavior
+
+        it_behaves_like 'creates helpers', :primary_asc_secondary_desc_order do
+          let(:next_record) { described_class.where(:primary => 1, :secondary => 1).first }
+          let(:prev_record) { described_class.where(:primary => 0, :secondary => 1).first }
+
+          before(:each) { instance.save! }
+        end # shared behavior
+      end # context
     end # context
   end # describe
 
