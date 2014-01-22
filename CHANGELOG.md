@@ -1,10 +1,19 @@
 # Changelog
 
+## 0.7.2
+
+* Update Mongoid dependency to prevent compatibility issues when using Mongoid
+  4.0.0.alpha versions with Mongoid::SleepingKingStudios.
+
 ## 0.7.1
+
+## New Features
 
 * Add #next and #prev helpers to Orderable concern.
 
 ## 0.7.0
+
+## New Features
 
 * Add Orderable concern.
 
