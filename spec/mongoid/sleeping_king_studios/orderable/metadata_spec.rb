@@ -8,10 +8,60 @@ require 'mongoid/sleeping_king_studios/support/models/base'
 RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   let(:name)        { :orderable }
   let(:sort_params) { :placeholder }
-  let(:properties)  { { :sort_params => sort_params } }
+  let(:normalized_params) { described_class.normalize_sort_params sort_params }
+  let(:properties)  { { :sort_params => normalized_params } }
   let(:instance) do
     described_class.new name, properties
   end # let
+
+  describe '::default_field_name' do
+    it { expect(described_class).to respond_to(:default_field_name).with(1).arguments }
+    it { expect(described_class.default_field_name normalized_params).to be == :placeholder_asc_order }
+  end # describe
+
+  describe '::normalize_sort_params' do
+    it { expect(described_class).to respond_to(:normalize_sort_params).with(1).arguments }
+
+    context 'with a symbol' do
+      let(:sort_params) { :field_name }
+
+      it 'sets the value' do
+        expect(normalized_params).to be == { sort_params => 1 }
+      end # it
+    end # context
+
+    context 'with a symbol and a direction' do
+      let(:sort_params) { :field_name.desc }
+
+      it 'sets the value' do
+        expect(normalized_params).to be == { sort_params.name => -1 }
+      end # it
+    end # context
+
+    context 'with a hash' do
+      let(:sort_params) { { :field_name => :desc } }
+
+      it 'sets the value' do
+        expect(normalized_params).to be == { sort_params.keys.first => -1 }
+      end # it
+    end # context
+
+    context 'with an array of symbols' do
+      let(:sort_params) { [:first_field, :second_field] }
+
+      it 'sets the value' do
+        expect(normalized_params).to be == { sort_params[0] => 1, sort_params[1] => 1 }
+      end # it
+    end # context
+
+    context 'with a heterogenous array' do
+      let(:sort_params) { [:first_field, :second_field.desc] }
+
+      it 'sets the value' do
+        expect(normalized_params).to be == { sort_params[0] => 1, sort_params[1].name => -1 }
+      end # it     
+    end # context
+  end # describe
 
   describe '#field_name' do
     it { expect(instance).to respond_to(:field_name).with(0).arguments }
@@ -148,46 +198,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
 
     it { expect(instance).to respond_to(:sort_criteria).with(1).arguments }
     it { expect(instance.sort_criteria base.all).to be_a Mongoid::Criteria }
-
-    context 'with a symbol' do
-      let(:sort_params) { :field_name }
-
-      it 'sets the value' do
-        expect(sort_options).to be == { sort_params.to_s => 1 }
-      end # it
-    end # context
-
-    context 'with a symbol and a direction' do
-      let(:sort_params) { :field_name.desc }
-
-      it 'sets the value' do
-        expect(sort_options).to be == { sort_params.name.to_s => -1 }
-      end # it
-    end # context
-
-    context 'with a hash' do
-      let(:sort_params) { { :field_name => :desc } }
-
-      it 'sets the value' do
-        expect(sort_options).to be == { sort_params.keys.first.to_s => -1 }
-      end # it
-    end # context
-
-    context 'with an array of symbols' do
-      let(:sort_params) { [:first_field, :second_field] }
-
-      it 'sets the value' do
-        expect(sort_options).to be == { sort_params[0].to_s => 1, sort_params[1].to_s => 1 }
-      end # it
-    end # context
-
-    context 'with a heterogenous array' do
-      let(:sort_params) { [:first_field, :second_field.desc] }
-
-      it 'sets the value' do
-        expect(sort_options).to be == { sort_params[0].to_s => 1, sort_params[1].name.to_s => -1 }
-      end # it     
-    end # context
+    it { expect(sort_options).to be == { sort_params.to_s => 1 } }
 
     describe 'with filter params' do
       let(:value) { { :value.ne => nil } }
