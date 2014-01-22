@@ -114,6 +114,8 @@ Finds the next document, based on the stored ordering values.
 
 ##### \#prev_ordering_name
 
+Finds the previous document, based on the stored ordering values.
+
 ##### \::first_ordering_name
 
 (Class Method) Finds the first document, based on the stored ordering values.
@@ -121,8 +123,6 @@ Finds the next document, based on the stored ordering values.
 ##### \::last_ordering_name
 
 (Class Method) Finds the last document, based on the stored ordering values.
-
-Finds the previous document, based on the stored ordering values.
 
 ##### ::reorder_ordering_name!
 
