@@ -109,14 +109,6 @@ module Mongoid::SleepingKingStudios
     def self.define_helpers base, metadata
       base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
       filtered  = metadata.filter_criteria(base)
-
-      base.send :define_method, :"first_#{base_name}" do
-        filtered.order_by(metadata.field_name.asc).limit(1).first
-      end # method
-
-      base.send :define_method, :"last_#{base_name}" do
-        filtered.order_by(metadata.field_name.desc).limit(1).first
-      end # method
       
       base.send :define_method, :"next_#{base_name}" do
         filtered.order_by(metadata.field_name.asc).where(metadata.field_name.gt => send(metadata.field_name)).limit(1).first
@@ -127,6 +119,15 @@ module Mongoid::SleepingKingStudios
       end # method
 
       meta = class << base; self; end
+
+      meta.send :define_method, :"first_#{base_name}" do
+        filtered.order_by(metadata.field_name.asc).limit(1).first
+      end # method
+
+      meta.send :define_method, :"last_#{base_name}" do
+        filtered.order_by(metadata.field_name.desc).limit(1).first
+      end # method
+
       meta.send :define_method, :"reorder_#{base_name}!" do
         base.update_all(metadata.field_name => nil)
         
@@ -176,6 +177,26 @@ module Mongoid::SleepingKingStudios
         concern.apply self, sort_params, options
       end # class method slugify
 
+      # @!method first_ordering_name
+      #   Finds the first document, based on the stored ordering values.
+      # 
+      #   The generated name of this method will depend on the sort params or the
+      #   :as option provided. For example, :as => :alphabetical_order will
+      #   result in an instance method #first_alphabetical.
+      # 
+      #   @return [Mongoid::Document, nil] The first document in the order, or
+      #     nil if there are no documents in the collection.
+
+      # @!method last_ordering_name
+      #   Finds the last document, based on the stored ordering values.
+      # 
+      #   The generated name of this method will depend on the sort params or the
+      #   :as option provided. For example, :as => :alphabetical_order will
+      #   result in an instance method #last_alphabetical.
+      # 
+      #   @return [Mongoid::Document, nil] The last document in the order, or nil
+      #     if there are no documents in the collection.
+
       # @!method reorder_ordering_name!
       #   Iterates through the entire collection and sets the cached order of
       #   each item to its current order index. Filtered items have their order
@@ -187,26 +208,6 @@ module Mongoid::SleepingKingStudios
       #   the :as option provided. For example, :as => :alphabetical_order will
       #   result in a class method ::reorder_alphabetical!.
     end # module
-
-    # @!method first_ordering_name
-    #   Finds the first document, based on the stored ordering values.
-    # 
-    #   The generated name of this method will depend on the sort params or the
-    #   :as option provided. For example, :as => :alphabetical_order will
-    #   result in an instance method #first_alphabetical.
-    # 
-    #   @return [Mongoid::Document, nil] The first document in the order, or
-    #     nil if there are no documents in the collection.
-
-    # @!method last_ordering_name
-    #   Finds the last document, based on the stored ordering values.
-    # 
-    #   The generated name of this method will depend on the sort params or the
-    #   :as option provided. For example, :as => :alphabetical_order will
-    #   result in an instance method #last_alphabetical.
-    # 
-    #   @return [Mongoid::Document, nil] The last document in the order, or nil
-    #     if there are no documents in the collection.
 
     # @!method next_ordering_name
     #   Finds the next document, based on the stored ordering values.

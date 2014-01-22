@@ -52,13 +52,13 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     let(:prev_name)  { "prev_#{base_name}".intern }
 
     describe '#first_ordering_name' do
-      it { expect(instance).to respond_to(first_name).with(0).arguments }
-      it { expect(instance.send first_name).to be == first_record }
+      it { expect(described_class).to respond_to(first_name).with(0).arguments }
+      it { expect(described_class.send first_name).to be == first_record }
     end # describe
 
     describe '#last_ordering_name' do
-      it { expect(instance).to respond_to(last_name).with(0).arguments }
-      it { expect(instance.send last_name).to be == last_record }
+      it { expect(described_class).to respond_to(last_name).with(0).arguments }
+      it { expect(described_class.send last_name).to be == last_record }
     end # describe
 
     describe '#next_ordering_name' do
