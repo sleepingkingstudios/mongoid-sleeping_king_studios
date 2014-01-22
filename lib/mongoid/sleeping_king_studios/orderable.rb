@@ -33,9 +33,10 @@ module Mongoid::SleepingKingStudios
     #   collection, generating the cached order index.
     # @param [Hash] options The options for the relation.
     def self.apply base, sort_params, options
-      name = :orderable
       validate_options    name, options
+      sort_params = Metadata.normalize_sort_params(sort_params)
       options.update :sort_params => sort_params
+      name = options.fetch(:as, Metadata.default_field_name(sort_params))
       meta = characterize name, options, Metadata
 
       relate base, name, meta

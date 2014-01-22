@@ -7,10 +7,9 @@ require 'mongoid/sleeping_king_studios/orderable/metadata'
 
 RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   let(:concern)      { Mongoid::SleepingKingStudios::Orderable }
-  let(:relation_key) { 'orderable' }
 
-  shared_examples 'sets the metadata' do
-    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[relation_key] }
+  shared_examples 'sets the metadata' do |name|
+    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[name.to_s] }
 
     it { expect(loaded_meta).to be_a Mongoid::SleepingKingStudios::Orderable::Metadata }
   end # shared examples
@@ -26,7 +25,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   end # shared examples
 
   shared_examples 'updates collection on save' do |name|
-    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[relation_key] }
+    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[name.to_s] }
 
     describe '#save' do
       it 'sets the order on the instance' do
@@ -105,7 +104,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::Counter }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata'
+      it_behaves_like 'sets the metadata', :value_asc_order do
+        before(:each) { $BINDING = true }
+        after(:each)  { $BINDING = false }
+      end
 
       it_behaves_like 'defines the field', :value_asc_order
 
@@ -141,7 +143,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ReverseCounter }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata'
+      it_behaves_like 'sets the metadata', :value_desc_order
 
       it_behaves_like 'defines the field', :value_desc_order
 
@@ -177,7 +179,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::Word }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata'
+      it_behaves_like 'sets the metadata', :alphabetical_order
 
       it_behaves_like 'defines the field', :alphabetical_order
 
@@ -213,7 +215,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::MultiOrder }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata'
+      it_behaves_like 'sets the metadata', :primary_asc_secondary_desc_order
 
       it_behaves_like 'defines the field', :primary_asc_secondary_desc_order
 
