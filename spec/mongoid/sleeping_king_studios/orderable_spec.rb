@@ -46,8 +46,21 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   end # shared examples
 
   shared_examples 'creates helpers' do |name|
-    let(:next_name) { "next_#{name}".gsub(/_order\z/,'').intern }
-    let(:prev_name) { "prev_#{name}".gsub(/_order\z/,'').intern }
+    let(:base_name)  { name.to_s.gsub(/_order\z/,'') }
+    let(:first_name) { "first_#{base_name}".intern }
+    let(:last_name)  { "last_#{base_name}".intern }
+    let(:next_name)  { "next_#{base_name}".intern }
+    let(:prev_name)  { "prev_#{base_name}".intern }
+
+    describe '#first_ordering_name' do
+      it { expect(instance).to respond_to(first_name).with(0).arguments }
+      it { expect(instance.send first_name).to be == first_record }
+    end # describe
+
+    describe '#last_ordering_name' do
+      it { expect(instance).to respond_to(last_name).with(0).arguments }
+      it { expect(instance.send last_name).to be == last_record }
+    end # describe
 
     describe '#next_ordering_name' do
       it { expect(instance).to respond_to(next_name).with(0).arguments }
@@ -114,8 +127,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         end # shared behavior
 
         it_behaves_like 'creates helpers', :value_asc_order do
-          let(:next_record) { described_class.where(:value => 16).first }
-          let(:prev_record) { described_class.where(:value => 4).first }
+          let(:first_record) { described_class.where(:value => 0).first }
+          let(:last_record)  { described_class.where(:value => 25).first }
+          let(:next_record)  { described_class.where(:value => 16).first }
+          let(:prev_record)  { described_class.where(:value => 4).first }
 
           before(:each) { instance.save! }
         end # shared behavior
@@ -148,8 +163,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         end # shared behavior
 
         it_behaves_like 'creates helpers', :value_desc_order do
-          let(:next_record) { described_class.where(:value => 4).first }
-          let(:prev_record) { described_class.where(:value => 16).first }
+          let(:first_record) { described_class.where(:value => 25).first }
+          let(:last_record)  { described_class.where(:value => 0).first }
+          let(:next_record)  { described_class.where(:value => 4).first }
+          let(:prev_record)  { described_class.where(:value => 16).first }
 
           before(:each) { instance.save! }
         end # shared behavior
@@ -182,8 +199,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         end # shared behavior
 
         it_behaves_like 'creates helpers', :alphabetical_order do
-          let(:next_record) { described_class.where(:letters => 'charlie').first }
-          let(:prev_record) { described_class.where(:letters => 'alpha').first }
+          let(:first_record) { described_class.where(:letters => 'alpha').first }
+          let(:last_record)  { described_class.where(:letters => 'foxtrot').first }
+          let(:next_record)  { described_class.where(:letters => 'charlie').first }
+          let(:prev_record)  { described_class.where(:letters => 'alpha').first }
 
           before(:each) { instance.save! }
         end # shared behavior
@@ -218,8 +237,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         end # shared behavior
 
         it_behaves_like 'creates helpers', :primary_asc_secondary_desc_order do
-          let(:next_record) { described_class.where(:primary => 1, :secondary => 1).first }
-          let(:prev_record) { described_class.where(:primary => 0, :secondary => 1).first }
+          let(:first_record) { described_class.where(:primary => 0, :secondary => 1).first }
+          let(:last_record)  { described_class.where(:primary => 2, :secondary => 0).first }
+          let(:next_record)  { described_class.where(:primary => 1, :secondary => 1).first }
+          let(:prev_record)  { described_class.where(:primary => 0, :secondary => 1).first }
 
           before(:each) { instance.save! }
         end # shared behavior

@@ -108,6 +108,14 @@ via the :as option (see below). For example, providing :as =>
 :alphabetical_order will generate helpers \#next_alphabetical, 
 \#prev_alphabetical, and ::reorder_alphabetical!.
 
+##### \#first_ordering_name
+
+Finds the first document, based on the stored ordering values.
+
+##### \#last_ordering_name
+
+Finds the last document, based on the stored ordering values.
+
 ##### \#next_ordering_name
 
 Finds the next document, based on the stored ordering values.
