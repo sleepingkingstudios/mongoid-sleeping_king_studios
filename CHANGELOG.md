@@ -1,8 +1,15 @@
 # Changelog
 
+## 0.7.6
+
+### Resolved Issues
+
+* Add unique relation names for each Ordering, fixing some undefined behavior 
+  when multiple orderings were defined on the same model.
+
 ## 0.7.5
 
-## New Features
+### New Features
 
 * Add #first and #last helpers to Orderable concern.
 
@@ -22,13 +29,13 @@
 
 ## 0.7.1
 
-## New Features
+### New Features
 
 * Add #next and #prev helpers to Orderable concern.
 
 ## 0.7.0
 
-## New Features
+### New Features
 
 * Add Orderable concern.
 
