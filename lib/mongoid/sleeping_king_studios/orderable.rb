@@ -178,7 +178,27 @@ module Mongoid::SleepingKingStudios
       # 
       #   The generated name of this method will depend on the sort params or
       #   the :as option provided. For example, :as => :alphabetical_order will
-      #   result in a class method ::reorder_alphabetical!
+      #   result in a class method ::reorder_alphabetical!.
     end # module
+
+    # @!method next_ordering_name
+    #   Finds the next document, based on the stored ordering values.
+    # 
+    #   The generated name of this method will depend on the sort params or the
+    #   :as option provided. For example, :as => :alphabetical_order will
+    #   result in an instance method #next_alphabetical.
+    # 
+    #   @return [Mongoid::Document, nil] The next document in the order, or nil
+    #     if there are no more documents in the collection.
+
+    # @!method prev_ordering_name
+    #   Finds the previous document, based on the stored ordering values.
+    # 
+    #   The generated name of this method will depend on the sort params or the
+    #   :as option provided. For example, :as => :alphabetical_order will
+    #   result in an instance method #prev_alphabetical.
+    # 
+    #   @return [Mongoid::Document, nil] The previous document in the order, or
+    #     nil if there are no prior documents in the collection.
   end # module
 end # module
