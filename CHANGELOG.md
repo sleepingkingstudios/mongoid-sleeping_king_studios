@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.5
+
+## New Features
+
+* Add #first and #last helpers to Orderable concern.
+
 ## 0.7.4
 
 * Remove bson_ext dependency.
