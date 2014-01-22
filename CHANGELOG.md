@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.3
+
+* Update bson_ext dependency to accept bson_ext 2.0.0 release candidates as 
+  required by Mongoid 4.0.0.alpha2.
+
 ## 0.7.2
 
 * Update Mongoid dependency to prevent compatibility issues when using Mongoid
