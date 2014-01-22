@@ -29,4 +29,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'factory_girl',                '~> 4.2'
   gem.add_development_dependency 'database_cleaner',            '~> 1.0.1'
   gem.add_development_dependency 'fuubar',                      '~> 1.2'
+  gem.add_development_dependency 'pry',                         '~> 0.9'
 end # gemspec

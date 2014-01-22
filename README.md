@@ -77,6 +77,58 @@ slower and more resource-intensive. Do not use this option outside of
 read-heavy applications with very specific requirements, e.g. a directory
 structure where you must access all parent directories on each page view.
 
+### Orderable
+
+    require 'mongoid/sleeping_king_studios/orderable'
+
+Adds a field that tracks the index of each record with respect to the provided
+sort order parameters.
+
+**How To Use:**
+
+    class OrderedDocument
+      include Mongoid::Document
+      include Mongoid::SleepingKingStudios::Orderable
+
+      cache_ordering :created_at.desc, :as => :most_recent_order
+    end # class
+
+The ::cache_ordering method accepts a subset of the params for an Origin
+\#order_by query operation, e.g.:
+
+- :first_field.desc, :second_field
+- { :first_field => -1, :second_field => :asc }
+- [[:first_field, :desc], [:second_field, 1]]
+
+#### Helpers
+
+Creating an ordering cache also creates the following helpers:
+
+##### ::reorder_ordering_name!
+
+Loops through the collection and sets each item's field to the appropriate
+ordered index. Normally, this is handled on item save, but this helper allows
+a bulk update of the collection when adding the concern to an existing model,
+or if data corruption or other issues have broken the existing values.
+
+#### Options
+
+##### As
+
+    cache_ordering sort_params, :as => :named_order
+
+Sets the name of the generated order field and helpers. If no name is 
+specified, one will be automatically generated of the form 
+first_field_desc_second_field_asc_order.
+
+##### Filter
+
+    cache_ordering sort_params, :filter => { :published => true }
+
+Restricts which records from the collection will be sorted to generate the
+ordering values. If a record is filtered out, its ordering field will be set 
+to nil.
+
 ### Sluggable
 
     require 'mongoid/sleeping_king_studios/sluggable'
