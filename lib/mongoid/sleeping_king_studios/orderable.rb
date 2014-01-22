@@ -106,7 +106,19 @@ module Mongoid::SleepingKingStudios
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_helpers base, metadata
-      name = :"reorder_#{metadata.field_name.to_s.gsub(/_order\z/,'')}!"
+      base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
+      
+      name = :"next_#{base_name}"
+      base.send :define_method, name do
+        base.order_by(metadata.field_name.asc).where(metadata.field_name.gt => send(metadata.field_name)).limit(1).first
+      end # method
+
+      name = :"prev_#{base_name}"
+      base.send :define_method, name do
+        base.order_by(metadata.field_name.desc).where(metadata.field_name.lt => send(metadata.field_name)).limit(1).first
+      end # method
+
+      name = :"reorder_#{base_name}!"
       meta = class << base; self; end
       meta.send :define_method, name do
         base.update_all(metadata.field_name => nil)
@@ -166,7 +178,27 @@ module Mongoid::SleepingKingStudios
       # 
       #   The generated name of this method will depend on the sort params or
       #   the :as option provided. For example, :as => :alphabetical_order will
-      #   result in a class method ::reorder_alphabetical!
+      #   result in a class method ::reorder_alphabetical!.
     end # module
+
+    # @!method next_ordering_name
+    #   Finds the next document, based on the stored ordering values.
+    # 
+    #   The generated name of this method will depend on the sort params or the
+    #   :as option provided. For example, :as => :alphabetical_order will
+    #   result in an instance method #next_alphabetical.
+    # 
+    #   @return [Mongoid::Document, nil] The next document in the order, or nil
+    #     if there are no more documents in the collection.
+
+    # @!method prev_ordering_name
+    #   Finds the previous document, based on the stored ordering values.
+    # 
+    #   The generated name of this method will depend on the sort params or the
+    #   :as option provided. For example, :as => :alphabetical_order will
+    #   result in an instance method #prev_alphabetical.
+    # 
+    #   @return [Mongoid::Document, nil] The previous document in the order, or
+    #     nil if there are no prior documents in the collection.
   end # module
 end # module

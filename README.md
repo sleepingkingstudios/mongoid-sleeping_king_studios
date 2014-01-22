@@ -102,14 +102,27 @@ The ::cache_ordering method accepts a subset of the params for an Origin
 
 #### Helpers
 
-Creating an ordering cache also creates the following helpers:
+Creating an ordering cache also creates the following helpers. The name of the
+generated helpers will depend on the sort params provided, or the name given 
+via the :as option (see below). For example, providing :as => 
+:alphabetical_order will generate helpers \#next_alphabetical, 
+\#prev_alphabetical, and ::reorder_alphabetical!.
+
+##### \#next_ordering_name
+
+Finds the next document, based on the stored ordering values.
+
+##### \#prev_ordering_name
+
+Finds the previous document, based on the stored ordering values.
 
 ##### ::reorder_ordering_name!
 
-Loops through the collection and sets each item's field to the appropriate
-ordered index. Normally, this is handled on item save, but this helper allows
-a bulk update of the collection when adding the concern to an existing model,
-or if data corruption or other issues have broken the existing values.
+(Class Method) Loops through the collection and sets each item's field to the 
+appropriate ordered index. Normally, this is handled on item save, but this 
+helper allows a bulk update of the collection when adding the concern to an 
+existing model, or if data corruption or other issues have broken the existing 
+values.
 
 #### Options
 
