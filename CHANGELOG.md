@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+* Add #next and #prev helpers to Orderable concern.
+
 ## 0.7.0
 
 * Add Orderable concern.
