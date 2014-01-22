@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4
+
+* Remove bson_ext dependency.
+
 ## 0.7.3
 
 * Update bson_ext dependency to accept bson_ext 2.0.0 release candidates as 
