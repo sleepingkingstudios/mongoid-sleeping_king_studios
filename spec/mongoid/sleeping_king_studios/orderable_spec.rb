@@ -51,24 +51,56 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     let(:next_name)  { "next_#{base_name}".intern }
     let(:prev_name)  { "prev_#{base_name}".intern }
 
-    describe '#first_ordering_name' do
-      it { expect(described_class).to respond_to(first_name).with(0).arguments }
+    describe '::first_ordering_name' do
+      it { expect(described_class).to respond_to(first_name).with(0..1).arguments }
       it { expect(described_class.send first_name).to be == first_record }
+
+      context 'with a provided scope' do
+        let(:scope) { described_class.where(:foo => :bar) }
+
+        it 'filters the result' do
+          expect(described_class.send first_name, scope).to be nil
+        end # it
+      end # context
     end # describe
 
-    describe '#last_ordering_name' do
-      it { expect(described_class).to respond_to(last_name).with(0).arguments }
+    describe '::last_ordering_name' do
+      it { expect(described_class).to respond_to(last_name).with(0..1).arguments }
       it { expect(described_class.send last_name).to be == last_record }
+
+      context 'with a provided scope' do
+        let(:scope) { described_class.where(:foo => :bar) }
+
+        it 'filters the result' do
+          expect(described_class.send last_name, scope).to be nil
+        end # it
+      end # context
     end # describe
 
     describe '#next_ordering_name' do
-      it { expect(instance).to respond_to(next_name).with(0).arguments }
+      it { expect(instance).to respond_to(next_name).with(0..1).arguments }
       it { expect(instance.send next_name).to be == next_record }
+
+      context 'with a provided scope' do
+        let(:scope) { described_class.where(:foo => :bar) }
+
+        it 'filters the result' do
+          expect(instance.send next_name, scope).to be nil
+        end # it
+      end # context
     end # describe
 
     describe '#prev_ordering_name' do
-      it { expect(instance).to respond_to(prev_name).with(0).arguments }
+      it { expect(instance).to respond_to(prev_name).with(0..1).arguments }
       it { expect(instance.send prev_name).to be == prev_record }
+
+      context 'with a provided scope' do
+        let(:scope) { described_class.where(:foo => :bar) }
+
+        it 'filters the result' do
+          expect(instance.send next_name, scope).to be nil
+        end # it
+      end # context
     end # describe
   end # shared examples
 
