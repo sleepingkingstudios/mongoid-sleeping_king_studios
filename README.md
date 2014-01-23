@@ -110,19 +110,23 @@ via the :as option (see below). For example, providing :as =>
 
 ##### \#next_ordering_name
 
-Finds the next document, based on the stored ordering values.
+Finds the next document, based on the stored ordering values. Takes an optional
+scope parameter to filter the results.
 
 ##### \#prev_ordering_name
 
-Finds the previous document, based on the stored ordering values.
+Finds the previous document, based on the stored ordering values. Takes an 
+optional scope parameter to filter the results.
 
 ##### \::first_ordering_name
 
-(Class Method) Finds the first document, based on the stored ordering values.
+(Class Method) Finds the first document, based on the stored ordering values. 
+Takes an optional scope parameter to filter the results.
 
 ##### \::last_ordering_name
 
-(Class Method) Finds the last document, based on the stored ordering values.
+(Class Method) Finds the last document, based on the stored ordering values. 
+Takes an optional scope parameter to filter the results.
 
 ##### ::reorder_ordering_name!
 

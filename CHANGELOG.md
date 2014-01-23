@@ -2,9 +2,16 @@
 
 ## 0.7.6
 
+### New Features
+
+* Moved Orderable finders into included/extended modules, so classes including
+  the concern can override the finders and use super() to call the originals. 
+  Also adds optional scope parameter to finders, which filters the results and
+  defaults to base class ::all.
+
 ### Resolved Issues
 
-* Add unique relation names for each Ordering, fixing some undefined behavior 
+* Add unique relation names for each ordering, fixing some undefined behavior 
   when multiple orderings were defined on the same model.
 
 ## 0.7.5
