@@ -109,26 +109,34 @@ module Mongoid::SleepingKingStudios
     def self.define_helpers base, metadata
       base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
       filtered  = metadata.filter_criteria(base)
-      
-      base.send :define_method, :"next_#{base_name}" do
-        filtered.order_by(metadata.field_name.asc).where(metadata.field_name.gt => send(metadata.field_name)).limit(1).first
+
+      # Define instance-level helpers.
+      instance_methods = Module.new
+
+      instance_methods.send :define_method, :"next_#{base_name}" do |scope = base|
+        metadata.filter_criteria(scope).asc(metadata.field_name).
+          where(metadata.field_name.gt => send(metadata.field_name)).limit(1).first
       end # method
 
-      base.send :define_method, :"prev_#{base_name}" do
-        filtered.order_by(metadata.field_name.desc).where(metadata.field_name.lt => send(metadata.field_name)).limit(1).first
+      instance_methods.send :define_method, :"prev_#{base_name}" do |scope = base|
+        metadata.filter_criteria(scope).desc(metadata.field_name).
+          where(metadata.field_name.lt => send(metadata.field_name)).limit(1).first
       end # method
 
-      meta = class << base; self; end
+      base.send :include, instance_methods
 
-      meta.send :define_method, :"first_#{base_name}" do
-        filtered.order_by(metadata.field_name.asc).limit(1).first
+      # Define class-level helpers.
+      class_methods = Module.new
+
+      class_methods.send :define_method, :"first_#{base_name}" do |scope = base|
+        metadata.filter_criteria(scope).asc(metadata.field_name).limit(1).first
       end # method
 
-      meta.send :define_method, :"last_#{base_name}" do
-        filtered.order_by(metadata.field_name.desc).limit(1).first
+      class_methods.send :define_method, :"last_#{base_name}" do |scope = base|
+        metadata.filter_criteria(scope).desc(metadata.field_name).limit(1).first
       end # method
 
-      meta.send :define_method, :"reorder_#{base_name}!" do
+      class_methods.send :define_method, :"reorder_#{base_name}!" do
         base.update_all(metadata.field_name => nil)
         
         criteria = metadata.sort_criteria(base)
@@ -138,6 +146,8 @@ module Mongoid::SleepingKingStudios
           record.set(metadata.field_name => index)
         end # each
       end # method
+
+      base.extend class_methods
     end # module method define_helpers
 
     # Returns a list of options that are valid for this concern.
