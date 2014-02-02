@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.7
+
+### New Features
+
+* Added ::slugify_all! class-level helper to Sluggable concern, to ease adding
+  the concern to a model with existing documents.
+
 ## 0.7.6
 
 ### New Features
