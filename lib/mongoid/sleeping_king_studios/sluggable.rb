@@ -49,6 +49,7 @@ module Mongoid::SleepingKingStudios
 
       define_fields      base, meta
       define_accessors   base, meta
+      define_helpers     base, meta
       define_validations base, meta
     end # module method apply
 
@@ -97,6 +98,24 @@ module Mongoid::SleepingKingStudios
         base.send :field, :slug_lock, :type => Boolean, :default => false
       end # if
     end # module method define_fields
+
+    def self.define_helpers base, metadata
+      # Define class-level helpers.
+      class_methods = Module.new
+
+      class_methods.send :define_method, :slugify_all! do
+        all.each do |obj|
+          value = metadata.value_to_slug(obj.send metadata.attribute)
+          if obj.slug.nil?
+            obj.set :slug => value
+          elsif obj.slug != value && !(metadata.lockable? && obj.slug_lock)
+            obj.set :slug => value
+          end # if
+        end # each
+      end # class method slugify_all!
+
+      base.extend class_methods
+    end # module method define_helpers
 
     # @api private
     # 
