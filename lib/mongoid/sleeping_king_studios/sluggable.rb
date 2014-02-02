@@ -99,6 +99,14 @@ module Mongoid::SleepingKingStudios
       end # if
     end # module method define_fields
 
+    # @api private
+    # 
+    # Creates the ::slugify_all! class-level helper method.
+    # 
+    # @param [Class] base The base class into which the concern is mixed in.
+    # @param [Metadata] metadata The metadata for the relation.
+    # 
+    # @since 0.7.7
     def self.define_helpers base, metadata
       # Define class-level helpers.
       class_methods = Module.new
@@ -106,7 +114,7 @@ module Mongoid::SleepingKingStudios
       class_methods.send :define_method, :slugify_all! do
         all.each do |obj|
           value = metadata.value_to_slug(obj.send metadata.attribute)
-          if obj.slug.nil?
+          if obj.slug.blank?
             obj.set :slug => value
           elsif obj.slug != value && !(metadata.lockable? && obj.slug_lock)
             obj.set :slug => value
@@ -185,6 +193,15 @@ module Mongoid::SleepingKingStudios
         concern = Mongoid::SleepingKingStudios::Sluggable
         concern.apply self, attribute, options
       end # class method slugify
+
+      # @!method slugify_all!
+      #   Loops through all documents in the collection. If the document's slug
+      #   is blank, or if it does not match the base attribute value,
+      #   calculates the value from the base attribute and assigns it
+      #   atomically. Locked slugs (see the :lockable option) are unaffected.
+      # 
+      #   Use this method to generate slugs when adding this concern to a model
+      #   with existing documents.
     end # module
   end # module
 end # module

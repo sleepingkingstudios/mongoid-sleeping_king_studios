@@ -64,14 +64,15 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
       context 'with created objects' do
         let!(:objects) do
-          objects = [*0..2].map { |index| described_class.create! source => "Object #{index}" }
+          objects = [*0..3].map { |index| described_class.create! source => "Object #{index}" }
           objects[0].set :slug => nil
-          objects[1].set :slug => 'random-slug'
+          objects[1].set :slug => ''
+          objects[2].set :slug => 'random-slug'
 
           if lockable
-            objects[3] = described_class.create! source => "Object 3"
-            objects[3].set :slug => 'locked-slug'
-            objects[3].set :slug_lock, true
+            objects[-1] = described_class.create! source => "Object 3"
+            objects[-1].set :slug => 'locked-slug'
+            objects[-1].set :slug_lock, true
           end # if
 
           objects.map &:reload
@@ -88,7 +89,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
           end # it
         end # context
 
-        context 'with a mismatched slug' do
+        context 'with an empty slug' do
           let(:instance) { objects[1] }
           
           it 'replaces with the processed base field' do
@@ -99,8 +100,19 @@ describe Mongoid::SleepingKingStudios::Sluggable do
           end # it
         end # context
 
-        context 'with a matching slug' do
+        context 'with a mismatched slug' do
           let(:instance) { objects[2] }
+          
+          it 'replaces with the processed base field' do
+            expect {
+              described_class.slugify_all!
+              instance.reload
+            }.to change(instance, :slug).to(instance.send(source).parameterize)
+          end # it
+        end # context
+
+        context 'with a matching slug' do
+          let(:instance) { objects[3] }
 
           it 'does not change' do
             expect {
@@ -112,7 +124,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
         if lockable
           context 'with a locked slug' do
-            let(:instance) { objects[3] }
+            let(:instance) { objects[-1] }
 
             it 'does not change' do
               expect {
