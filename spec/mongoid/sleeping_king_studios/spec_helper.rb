@@ -1,5 +1,6 @@
 # spec/mongoid/sleeping_king_studios/spec_helper.rb
 
+require 'bundler'
 Bundler.require # because the Gemfile specifies gems from git
 
 require 'rspec'

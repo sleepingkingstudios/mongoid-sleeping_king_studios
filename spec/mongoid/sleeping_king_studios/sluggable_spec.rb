@@ -58,6 +58,86 @@ describe Mongoid::SleepingKingStudios::Sluggable do
     end # context
   end # shared_examples
 
+  shared_examples 'defines the helpers' do |source, target, lockable = false|
+    describe '::slugify_all!' do
+      it { expect(described_class).to respond_to(:slugify_all!).with(0).arguments }
+
+      context 'with created objects' do
+        let!(:objects) do
+          objects = [*0..3].map { |index| described_class.create! source => "Object #{index}" }
+          objects[0].set :slug => nil
+          objects[1].set :slug => ''
+          objects[2].set :slug => 'random-slug'
+
+          if lockable
+            objects[-1] = described_class.create! source => "Object 3"
+            objects[-1].set :slug => 'locked-slug'
+            objects[-1].set :slug_lock, true
+          end # if
+
+          objects.map &:reload
+        end # let
+
+        context 'with a nil slug' do
+          let(:instance) { objects[0] }
+          
+          it 'replaces with the processed base field' do
+            expect {
+              described_class.slugify_all!
+              instance.reload
+            }.to change(instance, :slug).to(instance.send(source).parameterize)
+          end # it
+        end # context
+
+        context 'with an empty slug' do
+          let(:instance) { objects[1] }
+          
+          it 'replaces with the processed base field' do
+            expect {
+              described_class.slugify_all!
+              instance.reload
+            }.to change(instance, :slug).to(instance.send(source).parameterize)
+          end # it
+        end # context
+
+        context 'with a mismatched slug' do
+          let(:instance) { objects[2] }
+          
+          it 'replaces with the processed base field' do
+            expect {
+              described_class.slugify_all!
+              instance.reload
+            }.to change(instance, :slug).to(instance.send(source).parameterize)
+          end # it
+        end # context
+
+        context 'with a matching slug' do
+          let(:instance) { objects[3] }
+
+          it 'does not change' do
+            expect {
+              described_class.slugify_all!
+              instance.reload
+            }.not_to change(instance, :slug)
+          end # it
+        end # context
+
+        if lockable
+          context 'with a locked slug' do
+            let(:instance) { objects[-1] }
+
+            it 'does not change' do
+              expect {
+                described_class.slugify_all!
+                instance.reload
+              }.not_to change(instance, :slug)
+            end # it
+          end # context
+        end # if
+      end # context
+    end # describe
+  end # shared examples
+
   describe '::valid_options' do
     specify { expect(concern).to respond_to(:valid_options).with(0).arguments }
     specify { expect(concern.valid_options).to include :lockable }
@@ -97,6 +177,8 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
       it_behaves_like 'validates the field', :slug
 
+      it_behaves_like 'defines the helpers', :name, :slug
+
       context 'saved' do
         before(:each) do
           instance['slug'] = 'pygmalion'
@@ -122,6 +204,8 @@ describe Mongoid::SleepingKingStudios::Sluggable do
       it_behaves_like 'redefines the accessor', :name, :slug
 
       it_behaves_like 'validates the field', :slug
+
+      it_behaves_like 'defines the helpers', :name, :slug
 
       describe '#slug=' do
         specify 'locks the slug' do

@@ -172,6 +172,18 @@ short, url-friendly version.
       slugify :title
     end # class
 
+#### Helpers
+
+##### ::slugify_all!
+
+(Class Method) Loops through all documents in the collection. If the document's
+slug is blank, or if it does not match the base attribute value, calculates the
+value from the base attribute and assigns it atomically. Locked slugs (see the
+:lockable option) are unaffected.
+
+Use this method to generate slugs when adding this concern to a model with
+existing documents.
+
 #### Options
 
 ##### Lockable
