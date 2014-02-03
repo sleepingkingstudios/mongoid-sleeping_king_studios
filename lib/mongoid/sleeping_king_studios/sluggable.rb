@@ -108,19 +108,35 @@ module Mongoid::SleepingKingStudios
     # 
     # @since 0.7.7
     def self.define_helpers base, metadata
+      instance_methods = Module.new
+
+      instance_methods.send :define_method, :generate_slug! do
+        value = metadata.value_to_slug(send metadata.attribute)
+        if slug.blank?
+          self[:slug] = value
+          self.set :slug => value
+        elsif slug != value && !(metadata.lockable? && slug_lock)
+          self[:slug] = value
+          self.set :slug => value
+        end # if
+      end # method generate_slug!
+
+      instance_methods.send :define_method, :to_slug do
+        metadata.value_to_slug(send metadata.attribute)
+      end # method to_slug
+
+      base.include instance_methods
+
       # Define class-level helpers.
       class_methods = Module.new
 
       class_methods.send :define_method, :slugify_all! do
-        all.each do |obj|
-          value = metadata.value_to_slug(obj.send metadata.attribute)
-          if obj.slug.blank?
-            obj.set :slug => value
-          elsif obj.slug != value && !(metadata.lockable? && obj.slug_lock)
-            obj.set :slug => value
-          end # if
-        end # each
+        all.map &:generate_slug!
       end # class method slugify_all!
+
+      class_methods.send :define_method, :value_to_slug do |value|
+        metadata.value_to_slug(value)
+      end # class method value_to_slug
 
       base.extend class_methods
     end # module method define_helpers

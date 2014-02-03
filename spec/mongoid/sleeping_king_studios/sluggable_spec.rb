@@ -59,6 +59,112 @@ describe Mongoid::SleepingKingStudios::Sluggable do
   end # shared_examples
 
   shared_examples 'defines the helpers' do |source, target, lockable = false|
+    describe '#generate_slug!' do
+      let(:attributes) { { source => 'Object 1' } }
+      let(:instance) { described_class.new attributes }
+
+      it { expect(instance).to respond_to(:generate_slug!) }
+
+      context 'with a nil slug' do
+        before(:each) do
+          instance[:slug] = nil
+        end # before each
+
+        it 'replaces with the processed base field' do
+          expect {
+            instance.generate_slug!
+          }.to change(instance, :slug).to(instance.send(source).parameterize)
+        end # it
+
+        it 'persists the changed value' do
+          expect {
+            instance.save :validate => false
+            instance.generate_slug!
+            instance.reload
+          }.to change(instance, :slug).to(instance.send(source).parameterize)
+        end # it
+      end # context
+
+      context 'with an empty slug' do
+        before(:each) do
+          instance[:slug] = ''
+        end # before each
+
+        it 'replaces with the processed base field' do
+          expect {
+            instance.generate_slug!
+          }.to change(instance, :slug).to(instance.send(source).parameterize)
+        end # it
+
+        it 'persists the changed value' do
+          expect {
+            instance.save :validate => false
+            instance.generate_slug!
+            instance.reload
+          }.to change(instance, :slug).to(instance.send(source).parameterize)
+        end # it
+      end # context
+
+      context 'with a mismatched slug' do
+        before(:each) do
+          instance[:slug] = 'random-slug'
+        end # before each
+
+        it 'replaces with the processed base field' do
+          expect {
+            instance.generate_slug!
+          }.to change(instance, :slug).to(instance.send(source).parameterize)
+        end # it
+
+        it 'persists the changed value' do
+          expect {
+            instance.save :validate => false
+            instance.generate_slug!
+            instance.reload
+          }.to change(instance, :slug).to(instance.send(source).parameterize)
+        end # it
+      end # context
+
+      context 'with a matching slug' do
+        it 'does not change the value' do
+          expect {
+            instance.generate_slug!
+          }.not_to change(instance, :slug)
+        end # it
+
+        it 'does not change the persisted value' do
+          expect {
+            instance.save :validate => false
+            instance.generate_slug!
+            instance.reload
+          }.not_to change(instance, :slug)
+        end # it
+      end # context
+
+      if lockable
+        context 'with a locked slug' do
+          before(:each) do
+            instance[:slug] = 'locked-slug'
+            instance[:slug_lock] = true
+          end # before each
+
+          it 'does not change the value' do
+            expect {
+              instance.generate_slug!
+            }.not_to change(instance, :slug)
+          end # it
+
+          it 'does not change the persisted value' do
+            expect {
+              instance.save :validate => false
+              instance.generate_slug!
+              instance.reload
+            }.not_to change(instance, :slug)
+          end # it
+        end # context
+      end # if
+    end # describe
+
     describe '::slugify_all!' do
       it { expect(described_class).to respond_to(:slugify_all!).with(0).arguments }
 
@@ -72,7 +178,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
           if lockable
             objects[-1] = described_class.create! source => "Object 3"
             objects[-1].set :slug => 'locked-slug'
-            objects[-1].set :slug_lock, true
+            objects[-1].set :slug_lock => true
           end # if
 
           objects.map &:reload
@@ -135,6 +241,25 @@ describe Mongoid::SleepingKingStudios::Sluggable do
           end # context
         end # if
       end # context
+    end # describe
+
+    describe '#to_slug' do
+      let(:value) { 'Object Name' }
+      let(:instance) { described_class.new source => value }
+
+      it { expect(instance).to respond_to(:to_slug).with(0).arguments }
+      it 'returns the parameterized source value' do
+        expect(instance.to_slug).to be == value.parameterize
+      end # it
+    end # describe
+
+    describe '::value_to_slug' do
+      let(:value) { 'Value To Parameterize' }
+
+      it { expect(described_class).to respond_to(:value_to_slug).with(1).argument }
+      it 'returns the parameterized value' do
+        expect(described_class.value_to_slug value).to be == value.parameterize
+      end # it
     end # describe
   end # shared examples
 
@@ -205,7 +330,7 @@ describe Mongoid::SleepingKingStudios::Sluggable do
 
       it_behaves_like 'validates the field', :slug
 
-      it_behaves_like 'defines the helpers', :name, :slug
+      it_behaves_like 'defines the helpers', :name, :slug, true
 
       describe '#slug=' do
         specify 'locks the slug' do
