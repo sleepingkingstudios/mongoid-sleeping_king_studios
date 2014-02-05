@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.8
+
+### New Features
+
+* Added ::value_to_slug, #generate_slug! and #to_slug helpers to Sluggable 
+  concern.
+
 ## 0.7.7
 
 ### New Features

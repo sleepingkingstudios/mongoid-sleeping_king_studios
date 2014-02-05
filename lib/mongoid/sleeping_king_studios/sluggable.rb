@@ -192,12 +192,16 @@ module Mongoid::SleepingKingStudios
     #   attribute value, calculates the value from the base attribute and
     #   assigns it atomically. Locked slugs (see the :lockable option) are
     #   unaffected.
+    #
+    #   @since 0.7.8
 
     # @!method to_slug
     #   Converts the current value of the base attribute to a slug value, but
     #   returns the converted value instead of changing the slug field.
     # 
     #   @return [String] The converted string.
+    #
+    #   @since 0.7.8
 
     # Class methods added to the base class via #extend.
     module ClassMethods
@@ -230,6 +234,8 @@ module Mongoid::SleepingKingStudios
       # 
       #   Use this method to generate slugs when adding this concern to a model
       #   with existing documents.
+      #
+      #   @since 0.7.7
 
       # @!method value_to_slug(value)
       #   Converts the provided string to a slug value. Delegates to
@@ -239,6 +245,8 @@ module Mongoid::SleepingKingStudios
       #   @param [String] value The string to convert into a slug.
       # 
       #   @return [String] The converted string.
+      #
+      #   @since 0.7.8
     end # module
   end # module
 end # module
