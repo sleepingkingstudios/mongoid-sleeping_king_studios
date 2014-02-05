@@ -174,6 +174,12 @@ short, url-friendly version.
 
 #### Helpers
 
+##### #generate_slug!
+
+If the document's slug is blank, or if it does not match the base attribute
+value, calculates the value from the base attribute and assigns it atomically.
+Locked slugs (see the :lockable option) are unaffected.
+
 ##### ::slugify_all!
 
 (Class Method) Loops through all documents in the collection. If the document's
@@ -183,6 +189,15 @@ value from the base attribute and assigns it atomically. Locked slugs (see the
 
 Use this method to generate slugs when adding this concern to a model with
 existing documents.
+
+##### #to_slug
+
+Converts the current value of the base attribute to a slug value, but returns
+the converted value instead of changing the slug field.
+
+##### ::value_to_slug
+
+(Class Method) Converts the provided string to a slug value.
 
 #### Options
 
