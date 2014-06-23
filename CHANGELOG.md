@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.9
+
+### Resolved Issues
+
+* Rewrote internal Orderable::define_callbacks to resolve reliance on
+  unsupported early return behavior in ActiveSupport::Callbacks, causing errors
+  when used with ActiveSupport 4.1+.
+
 ## 0.7.8
 
 ### New Features
