@@ -73,10 +73,7 @@ module Mongoid::SleepingKingStudios
         order_index = ordering.index(self)
 
         if order_index.nil?
-          if send(metadata.field_was).nil?
-            # Both the old and new values are nil, so mission accomplished.
-            return
-          else
+          unless send(metadata.field_was).nil?
             # The old value wasn't nil, so remember it and set the new value,
             # then start looping through the ordered collection at the old
             # value.
@@ -87,15 +84,21 @@ module Mongoid::SleepingKingStudios
 
             # Set the value in the datastore.
             set(metadata.field_name => order_index)
+
+            # Atomically update the subsequent documents in the collection.
+            ordering[order_index..-1].each_with_index do |object, i|
+              object.set(metadata.field_name => (order_index + i))
+            end # each
           end # unless
         else
           # Update the current instance.
           self[metadata.field_name] = order_index
-        end # if
 
-        ordering[order_index..-1].each_with_index do |object, i|
-          object.set(metadata.field_name => (order_index + i))
-        end # each
+          # Atomically update the subsequent documents in the collection.
+          ordering[order_index..-1].each_with_index do |object, i|
+            object.set(metadata.field_name => (order_index + i))
+          end # each
+        end # if
       end # callback
     end # module method define_callbacks
 
