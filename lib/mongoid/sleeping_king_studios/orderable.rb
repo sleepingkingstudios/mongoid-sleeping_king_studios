@@ -75,7 +75,7 @@ module Mongoid::SleepingKingStudios
         if order_index.nil?
           if send(metadata.field_was).nil?
             # Both the old and new values are nil, so mission accomplished.
-            return
+            break
           else
             # The old value wasn't nil, so remember it and set the new value,
             # then start looping through the ordered collection at the old

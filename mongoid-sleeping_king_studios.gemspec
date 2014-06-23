@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.require_path = 'lib'
   gem.files        = Dir["lib/**/*.rb", "LICENSE", "*.md"]
   
-  gem.add_runtime_dependency 'mongoid',  '>= 4.0.0.alpha.1'
+  gem.add_runtime_dependency 'mongoid',  '>= 4.0.0.rc.2'
   gem.add_runtime_dependency 'sleeping_king_studios-ext', '~> 0.1'
   
   gem.add_development_dependency 'rspec',                       '~> 2.14'
