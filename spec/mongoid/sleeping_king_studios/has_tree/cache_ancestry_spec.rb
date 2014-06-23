@@ -62,7 +62,7 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
 
         specify 'raises an error' do
           expect { instance.send ancestors_name }.to raise_error(
-            Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor,
+            Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError,
             /unable to find #{ancestors_name} with ids/
           ) # end expect
         end # specify
@@ -77,7 +77,7 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
 
         specify 'raises an error' do
           expect { instance.send ancestors_name }.to raise_error(
-            Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor,
+            Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError,
             /unable to find #{ancestors_name} with ids/
           ) # end expect
         end # specify
@@ -379,7 +379,7 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
 
           specify 'raises an error' do
             expect { instance.validate_ancestry }.to raise_error(
-              Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor,
+              Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError,
               /unable to find #{ancestors_name} with ids/
             ) # end expectation
           end # specify
@@ -387,13 +387,17 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
 
         context 'with an incorrect ancestor' do
           let(:stranger) { FactoryGirl.create factory_name }
+          let(:message) do
+            "Problem:\n  Ancestor not found for #{metadata.foreign_key} #{instance[foreign_key]}."
+          end
 
           before(:each) { instance[foreign_key][1] = stranger.send(field_name) }
 
           specify 'raises an error' do
+            # binding.pry
             expect { instance.validate_ancestry }.to raise_error(
               Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError,
-              /Ancestor not found for #{metadata.foreign_key} #{instance[foreign_key]}/
+              "Problem:\n  Ancestor not found for #{metadata.foreign_key} #{stranger[metadata.foreign_key]}."
             ) # end expectation
           end # specify
         end # context
@@ -484,13 +488,17 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
     context 'with missing ids' do
       let(:objects) { [*0..2].map { FactoryGirl.create :named_ancestors } }
       let(:values)  { objects.map(&:id).tap { |ary| ary[1] = nil } }
+      let(:message) do
+        str = "Problem:\n  Ancestor not found for ancestor_ids ["
+        str << values.map(&:inspect).join(', ')
+        str << '].'
+      end
 
       specify 'raises an error' do
         expect {
           concern.find_by_ancestry base, metadata, values 
         }.to raise_error(
-          Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError,
-          /unable to find ancestors with ids/
+          Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError, message
         ) # end expectation
       end # specify
     end # context
@@ -534,8 +542,8 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
           expect {
             concern.find_one_by_ancestry base, metadata, values
           }.to raise_error(
-            Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor,
-            /unable to find ancestors with ids/
+            Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError,
+            "Problem:\n  Ancestor not found for ancestor_ids []."
           ) # end expect
         end # specify
       end # context
@@ -641,9 +649,6 @@ describe Mongoid::SleepingKingStudios::HasTree::CacheAncestry do
     let(:instance)        { FactoryGirl.build :category }
     let(:metadata)        { described_class.relations_sleeping_king_studios['has_tree'][:cache_ancestry] }
     let(:factory_name)    { :category }
-
-    before(:each) { $BINDING_SLUG = true }
-    after(:each)  { $BINDING_SLUG = false }
 
     describe '#slug' do
       specify { expect(instance).to respond_to(:slug).with(0).arguments }

@@ -139,7 +139,7 @@ module Mongoid::SleepingKingStudios
             end # while
             self.send :"#{metadata.foreign_key}=", ary
           rescue Mongoid::Errors::DocumentNotFound
-            raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{relation_name}", object.send(metadata.parent_foreign_key)
+            raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new 'obviously bogus error' # object.send(metadata.parent_foreign_key)
           end # begin-rescue
         end # method rebuild_ancestry!
 
@@ -156,16 +156,15 @@ module Mongoid::SleepingKingStudios
                 if ancestor.send(metadata.parent_foreign_key).nil?
                   # If the ancestor's parent is missing.
                   raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, ancestors[index - 1].send(metadata.field_name)
-                elsif ancestor.send(metadata.parent_foreign_key) != ancestors[index - 1].send(:id)
+                elsif ancestor.send(metadata.parent_foreign_key) != ancestors[index - 1].send(metadata.field_name)
                   # If the ancestor's parent is not the same as the previous
                   # ancestor.
-                  binding.pry if $BINDING_SLUG
-                  raise Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor.new "#{metadata.relation_name}", ancestor.send(metadata.parent_name).send(metadata.field_name), ancestors[index - 1].send(metadata.field_name)
+                  raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::UnexpectedAncestorError.new 'obviously bogus error' # ancestor.send(metadata.parent_name).send(metadata.field_name), ancestors[index - 1].send(metadata.field_name)
                 end # if
               end # if
             rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
               # If the ancestor id is nil, or the ancestor does not exist.
-              raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", ancestor_id
+              raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new 'obviously bogus error' # "#{metadata.relation_name}", ancestor_id
             end # begin-rescue
           end # each with index
         end # method validate_ancestry!
@@ -192,14 +191,14 @@ module Mongoid::SleepingKingStudios
           if objects.count == 0
             raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, values
           elsif objects.count > 1
-            raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", values
+            raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, values # "#{metadata.relation_name}", values
           end # if-elsif
 
           objects.first
         end # if-else
       rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
         # If the ancestor id is nil, or the ancestor does not exist.
-        raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name.to_s.singularize}", values
+        raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, values # "#{metadata.relation_name.to_s.singularize}", values
       end # class method find_one_by_ancestry
 
       def self.find_by_ancestry base, metadata, values
@@ -214,14 +213,14 @@ module Mongoid::SleepingKingStudios
           # If there are fewer objects than expected ancestors, then was unable
           # to find one or more ancestors.
           if objects.count < values.count
-            raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", values
+            raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new 'obviously bogus error' # "#{metadata.relation_name}", values
           end # if
           
           objects
         end # if-else
       rescue Mongoid::Errors::InvalidFind, Mongoid::Errors::DocumentNotFound
         # If the ancestor id is nil, or the ancestor does not exist.
-        raise Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor.new "#{metadata.relation_name}", values
+        raise Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError.new base, metadata, values # "#{metadata.relation_name}", values
       end # class method find_by_ancestry
 
       # Get the valid options allowed with this concern.
@@ -254,7 +253,7 @@ module Mongoid::SleepingKingStudios
       #   empty array. If an error is raised, consider calling
       #   #rebuild_ancestry!
       # 
-      #   @raise [Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor]
+      #   @raise [Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError]
       #     If one or more of the ancestors is not found in the datastore (the
       #     id is wrong, the object is not persisted, there is a nil value in
       #     ancestor_ids, and so on).
@@ -272,7 +271,7 @@ module Mongoid::SleepingKingStudios
       #   to the :ancestor_ids field. This overwrites the value of
       #   :ancestor_ids on the current object, but not on any of its ancestors.
       # 
-      #   @raise [Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor]
+      #   @raise [Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError]
       #     If the current object or an ancestor has an invalid #parent.
 
       # @!method validate_ancestry!
@@ -281,12 +280,12 @@ module Mongoid::SleepingKingStudios
       #   object's parent correctly matches the last value in its own
       #   :ancestor_ids field.
       # 
-      #   @raise [Mongoid::SleepingKingStudios::HasTree::Errors::MissingAncestor]
+      #   @raise [Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::MissingAncestorError]
       #     If any of the ancestors is not found in the datastore (the id is
       #     wrong, the object is not persisted, there is a nil value in
       #     ancestor_ids, and so on).
       #
-      #   @raise [Mongoid::SleepingKingStudios::HasTree::Errors::UnexpectedAncestor]
+      #   @raise [Mongoid::SleepingKingStudios::HasTree::CacheAncestry::Errors::UnexpectedAncestorError]
       #     If there is a mismatch between an object's #parent and the last
       #     value in the object's :ancestor_ids field.
     end # module
