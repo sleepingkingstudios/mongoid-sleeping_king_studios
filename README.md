@@ -77,6 +77,83 @@ slower and more resource-intensive. Do not use this option outside of
 read-heavy applications with very specific requirements, e.g. a directory
 structure where you must access all parent directories on each page view.
 
+### Orderable
+
+    require 'mongoid/sleeping_king_studios/orderable'
+
+Adds a field that tracks the index of each record with respect to the provided
+sort order parameters.
+
+**How To Use:**
+
+    class OrderedDocument
+      include Mongoid::Document
+      include Mongoid::SleepingKingStudios::Orderable
+
+      cache_ordering :created_at.desc, :as => :most_recent_order
+    end # class
+
+The ::cache_ordering method accepts a subset of the params for an Origin
+\#order_by query operation, e.g.:
+
+- :first_field.desc, :second_field
+- { :first_field => -1, :second_field => :asc }
+- [[:first_field, :desc], [:second_field, 1]]
+
+#### Helpers
+
+Creating an ordering cache also creates the following helpers. The name of the
+generated helpers will depend on the sort params provided, or the name given 
+via the :as option (see below). For example, providing :as => 
+:alphabetical_order will generate helpers \#next_alphabetical, 
+\#prev_alphabetical, and ::reorder_alphabetical!.
+
+##### \#next_ordering_name
+
+Finds the next document, based on the stored ordering values. Takes an optional
+scope parameter to filter the results.
+
+##### \#prev_ordering_name
+
+Finds the previous document, based on the stored ordering values. Takes an 
+optional scope parameter to filter the results.
+
+##### \::first_ordering_name
+
+(Class Method) Finds the first document, based on the stored ordering values. 
+Takes an optional scope parameter to filter the results.
+
+##### \::last_ordering_name
+
+(Class Method) Finds the last document, based on the stored ordering values. 
+Takes an optional scope parameter to filter the results.
+
+##### ::reorder_ordering_name!
+
+(Class Method) Loops through the collection and sets each item's field to the 
+appropriate ordered index. Normally, this is handled on item save, but this 
+helper allows a bulk update of the collection when adding the concern to an 
+existing model, or if data corruption or other issues have broken the existing 
+values.
+
+#### Options
+
+##### As
+
+    cache_ordering sort_params, :as => :named_order
+
+Sets the name of the generated order field and helpers. If no name is 
+specified, one will be automatically generated of the form 
+first_field_desc_second_field_asc_order.
+
+##### Filter
+
+    cache_ordering sort_params, :filter => { :published => true }
+
+Restricts which records from the collection will be sorted to generate the
+ordering values. If a record is filtered out, its ordering field will be set 
+to nil.
+
 ### Sluggable
 
     require 'mongoid/sleeping_king_studios/sluggable'
@@ -95,6 +172,33 @@ short, url-friendly version.
       slugify :title
     end # class
 
+#### Helpers
+
+##### #generate_slug!
+
+If the document's slug is blank, or if it does not match the base attribute
+value, calculates the value from the base attribute and assigns it atomically.
+Locked slugs (see the :lockable option) are unaffected.
+
+##### ::slugify_all!
+
+(Class Method) Loops through all documents in the collection. If the document's
+slug is blank, or if it does not match the base attribute value, calculates the
+value from the base attribute and assigns it atomically. Locked slugs (see the
+:lockable option) are unaffected.
+
+Use this method to generate slugs when adding this concern to a model with
+existing documents.
+
+##### #to_slug
+
+Converts the current value of the base attribute to a slug value, but returns
+the converted value instead of changing the slug field.
+
+##### ::value_to_slug
+
+(Class Method) Converts the provided string to a slug value.
+
 #### Options
 
 ##### Lockable
@@ -107,5 +211,5 @@ base attribute, set :slug_lock to false.
 
 ## License
 
-RSpec::SleepingKingStudios is released under the
+Mongoid::SleepingKingStudios is released under the
 [MIT License](http://www.opensource.org/licenses/MIT).

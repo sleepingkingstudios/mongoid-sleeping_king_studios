@@ -49,6 +49,7 @@ module Mongoid::SleepingKingStudios
 
       define_fields      base, meta
       define_accessors   base, meta
+      define_helpers     base, meta
       define_validations base, meta
     end # module method apply
 
@@ -100,6 +101,48 @@ module Mongoid::SleepingKingStudios
 
     # @api private
     # 
+    # Creates the ::slugify_all! class-level helper method.
+    # 
+    # @param [Class] base The base class into which the concern is mixed in.
+    # @param [Metadata] metadata The metadata for the relation.
+    # 
+    # @since 0.7.7
+    def self.define_helpers base, metadata
+      instance_methods = Module.new
+
+      instance_methods.send :define_method, :generate_slug! do
+        value = metadata.value_to_slug(send metadata.attribute)
+        if slug.blank?
+          self[:slug] = value
+          self.set :slug => value if persisted?
+        elsif slug != value && !(metadata.lockable? && slug_lock)
+          self[:slug] = value
+          self.set :slug => value if persisted?
+        end # if
+      end # method generate_slug!
+
+      instance_methods.send :define_method, :to_slug do
+        metadata.value_to_slug(send metadata.attribute)
+      end # method to_slug
+
+      base.include instance_methods
+
+      # Define class-level helpers.
+      class_methods = Module.new
+
+      class_methods.send :define_method, :slugify_all! do
+        all.map &:generate_slug!
+      end # class method slugify_all!
+
+      class_methods.send :define_method, :value_to_slug do |value|
+        metadata.value_to_slug(value)
+      end # class method value_to_slug
+
+      base.extend class_methods
+    end # module method define_helpers
+
+    # @api private
+    # 
     # Sets a validation on the slug field that validates the presence of the
     # slug, and that the value is of a valid format (lower-case characters a-z,
     # digits 0-9, and hyphens "-").
@@ -144,6 +187,22 @@ module Mongoid::SleepingKingStudios
     # 
     #   @return [Boolean] True if the slug is locked; otherwise false.
 
+    # @!method generate_slug!
+    #   If the document's slug is blank, or if it does not match the base
+    #   attribute value, calculates the value from the base attribute and
+    #   assigns it atomically. Locked slugs (see the :lockable option) are
+    #   unaffected.
+    #
+    #   @since 0.7.8
+
+    # @!method to_slug
+    #   Converts the current value of the base attribute to a slug value, but
+    #   returns the converted value instead of changing the slug field.
+    # 
+    #   @return [String] The converted string.
+    #
+    #   @since 0.7.8
+
     # Class methods added to the base class via #extend.
     module ClassMethods
       # @overload slugify attribute, options = {}
@@ -166,6 +225,28 @@ module Mongoid::SleepingKingStudios
         concern = Mongoid::SleepingKingStudios::Sluggable
         concern.apply self, attribute, options
       end # class method slugify
+
+      # @!method slugify_all!
+      #   Loops through all documents in the collection. If the document's slug
+      #   is blank, or if it does not match the base attribute value,
+      #   calculates the value from the base attribute and assigns it
+      #   atomically. Locked slugs (see the :lockable option) are unaffected.
+      # 
+      #   Use this method to generate slugs when adding this concern to a model
+      #   with existing documents.
+      #
+      #   @since 0.7.7
+
+      # @!method value_to_slug(value)
+      #   Converts the provided string to a slug value. Delegates to
+      #   metadata.value_to_slug, so overriding this method will not change how
+      #   slugs are generated.
+      # 
+      #   @param [String] value The string to convert into a slug.
+      # 
+      #   @return [String] The converted string.
+      #
+      #   @since 0.7.8
     end # module
   end # module
 end # module
