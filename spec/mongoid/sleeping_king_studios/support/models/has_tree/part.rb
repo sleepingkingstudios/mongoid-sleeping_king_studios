@@ -1,5 +1,6 @@
 # spec/mongoid/sleeping_king_studios/support/models/has_tree/part.rb
 
+require 'mongoid/sleeping_king_studios/support/models/base'
 require 'mongoid/sleeping_king_studios/support/models/has_tree'
 
 module Mongoid::SleepingKingStudios::Support::Models::HasTree

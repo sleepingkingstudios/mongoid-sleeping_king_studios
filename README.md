@@ -1,4 +1,4 @@
-# Mongoid::SleepingKingStudios
+# Mongoid::SleepingKingStudios [![Build Status](https://travis-ci.org/sleepingkingstudios/mongoid-sleeping_king_studios.svg?branch=master)](https://travis-ci.org/sleepingkingstudios/mongoid-sleeping_king_studios)
 
 A collection of concerns and extensions to add functionality to Mongoid
 documents and collections.

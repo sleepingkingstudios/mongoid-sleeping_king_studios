@@ -1,5 +1,6 @@
 # spec/mongoid/sleeping_king_studios/support/models/sluggable/slug.rb
 
+require 'mongoid/sleeping_king_studios/support/models/base'
 require 'mongoid/sleeping_king_studios/support/models/sluggable'
 
 module Mongoid::SleepingKingStudios::Support::Models::Sluggable

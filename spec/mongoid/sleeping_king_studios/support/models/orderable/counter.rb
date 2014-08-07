@@ -1,5 +1,6 @@
 # spec/mongoid/sleeping_king_studios/support/models/orderable/counter.rb
 
+require 'mongoid/sleeping_king_studios/support/models/base'
 require 'mongoid/sleeping_king_studios/support/models/orderable'
 
 module Mongoid::SleepingKingStudios::Support::Models::Orderable
