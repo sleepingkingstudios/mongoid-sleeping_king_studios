@@ -20,13 +20,12 @@ Gem::Specification.new do |gem|
   gem.require_path = 'lib'
   gem.files        = Dir["lib/**/*.rb", "LICENSE", "*.md"]
   
-  gem.add_runtime_dependency 'mongoid',  '>= 4.0.0.rc.2'
-  gem.add_runtime_dependency 'sleeping_king_studios-ext', '~> 0.1'
+  gem.add_runtime_dependency 'mongoid',  '~> 4.0'
+  gem.add_runtime_dependency 'sleeping_king_studios-ext', '~> 0.2'
   
-  gem.add_development_dependency 'rspec',                       '~> 2.14'
-  gem.add_development_dependency 'rspec-sleeping_king_studios', '~> 1.0'
-  gem.add_development_dependency 'factory_girl',                '~> 4.2'
-  gem.add_development_dependency 'database_cleaner',            '~> 1.0.1'
-  gem.add_development_dependency 'fuubar',                      '~> 1.2'
-  gem.add_development_dependency 'pry',                         '~> 0.9'
+  gem.add_development_dependency 'rspec',                       '~> 3.0'
+  gem.add_development_dependency 'rspec-sleeping_king_studios', '~> 2.0.0.beta.0'
+  gem.add_development_dependency 'factory_girl',                '~> 4.4'
+  gem.add_development_dependency 'database_cleaner',            '~> 1.3'
+  gem.add_development_dependency 'pry',                         '~> 0.10'
 end # gemspec
