@@ -22,7 +22,8 @@ Gem::Specification.new do |gem|
   
   gem.add_runtime_dependency 'mongoid',  '~> 4.0'
   gem.add_runtime_dependency 'sleeping_king_studios-ext', '~> 0.2'
-  
+
+  gem.add_development_dependency 'rake',                        '~> 10.3', '>= 10.3.2'
   gem.add_development_dependency 'rspec',                       '~> 3.0'
   gem.add_development_dependency 'rspec-sleeping_king_studios', '~> 2.0.0.beta.0'
   gem.add_development_dependency 'factory_girl',                '~> 4.4'
