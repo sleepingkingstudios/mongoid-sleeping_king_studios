@@ -136,10 +136,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::Counter }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata', :value_asc_order do
-        before(:each) { $BINDING = true }
-        after(:each)  { $BINDING = false }
-      end
+      it_behaves_like 'sets the metadata', :value_asc_order
 
       it_behaves_like 'defines the field', :value_asc_order
 
