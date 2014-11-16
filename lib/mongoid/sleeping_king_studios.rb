@@ -1,7 +1,6 @@
 # lib/mongoid/sleeping_king_studios.rb
 
 require 'mongoid'
-require 'sleeping_king_studios/ext/object/metaclass'
 
 module Mongoid
   # A collection of concerns and extensions to add functionality to Mongoid

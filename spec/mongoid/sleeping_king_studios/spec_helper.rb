@@ -1,13 +1,12 @@
 # spec/mongoid/sleeping_king_studios/spec_helper.rb
 
-require 'bundler'
-Bundler.require # because the Gemfile specifies gems from git
+require 'i18n'
 
 # Silence deprecation warning from I18n.
 I18n.enforce_available_locales = true
 
 require 'rspec'
-require 'rspec/sleeping_king_studios'
+require 'rspec/sleeping_king_studios/all'
 require 'factory_girl'
 require 'database_cleaner'
 require 'pry'
