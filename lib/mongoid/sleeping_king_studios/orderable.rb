@@ -7,27 +7,27 @@ module Mongoid::SleepingKingStudios
   # specified sort query. Storing the order in this fashion allows, for
   # example, finding the next or previous records in the set without needing to
   # perform the full sort query each time.
-  # 
+  #
   # @example Order by Most Recently Created:
   #   class SortedDocument
   #     include Mongoid::Document
   #     include Mongoid::SleepingKingStudios::Ordering
-  # 
+  #
   #     cache_ordering :created_at.desc, :as => :most_recent_order
   #   end # class
-  # 
+  #
   # @see ClassMethods#cache_ordering
-  # 
+  #
   # @since 0.7.0
   module Orderable
     extend ActiveSupport::Concern
     extend Mongoid::SleepingKingStudios::Concern
 
     # @api private
-    # 
+    #
     # Sets up the orderable relation, creating fields, callbacks and helper
     # methods.
-    # 
+    #
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Symbol, Array, Hash] sort_params The params used to sort the
     #   collection, generating the cached order index.
@@ -47,10 +47,10 @@ module Mongoid::SleepingKingStudios
     end # module method apply
 
     # @api private
-    # 
+    #
     # Creates an order field of type Integer on the base class, and sets the
     # writer to private.
-    # 
+    #
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_fields base, metadata
@@ -60,10 +60,10 @@ module Mongoid::SleepingKingStudios
     end # module method define_fields
 
     # @api private
-    # 
+    #
     # Adds an after_save callback to update the index of the record and all
     # subsequent records in the ordering.
-    # 
+    #
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_callbacks base, metadata
@@ -106,7 +106,7 @@ module Mongoid::SleepingKingStudios
     #
     # Adds a class-level reorder! helper that loops through the entire
     # collection and updates the ordering of each item.
-    # 
+    #
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_helpers base, metadata
@@ -141,7 +141,7 @@ module Mongoid::SleepingKingStudios
 
       class_methods.send :define_method, :"reorder_#{base_name}!" do
         base.update_all(metadata.field_name => nil)
-        
+
         criteria = metadata.sort_criteria(base)
         ordering = criteria.to_a
 
@@ -154,12 +154,13 @@ module Mongoid::SleepingKingStudios
     end # module method define_helpers
 
     # Returns a list of options that are valid for this concern.
-    # 
+    #
     # @return [Array<Symbol>] The list of valid options.
     def self.valid_options
       super + %i(
         as
         filter
+        scope
       ) # end array
     end # module method valid options
 
@@ -167,7 +168,7 @@ module Mongoid::SleepingKingStudios
     module ClassMethods
       # @overload cache_ordering sort_params, options = {}
       #   Creates the order field and sets up the callbacks and helpers.
-      # 
+      #
       #   @param [Array] sort_params The sort query used to order the
       #     collection. Accepts a subset of the options for a default
       #     Origin sort operation:
@@ -182,7 +183,7 @@ module Mongoid::SleepingKingStudios
       #   @option options [Hash] :filter
       #     Sets a filter that excludes collection items from the ordering
       #     process. Accepts the same parameters as a Mongoid #where query.
-      # 
+      #
       #   @raise [Mongoid::Errors::InvalidOptions] If any of the provided
       #     options are invalid.
       def cache_ordering *sort_params, **options
@@ -192,21 +193,21 @@ module Mongoid::SleepingKingStudios
 
       # @!method first_ordering_name
       #   Finds the first document, based on the stored ordering values.
-      # 
+      #
       #   The generated name of this method will depend on the sort params or the
       #   :as option provided. For example, :as => :alphabetical_order will
       #   result in an instance method #first_alphabetical.
-      # 
+      #
       #   @return [Mongoid::Document, nil] The first document in the order, or
       #     nil if there are no documents in the collection.
 
       # @!method last_ordering_name
       #   Finds the last document, based on the stored ordering values.
-      # 
+      #
       #   The generated name of this method will depend on the sort params or the
       #   :as option provided. For example, :as => :alphabetical_order will
       #   result in an instance method #last_alphabetical.
-      # 
+      #
       #   @return [Mongoid::Document, nil] The last document in the order, or nil
       #     if there are no documents in the collection.
 
@@ -216,7 +217,7 @@ module Mongoid::SleepingKingStudios
       #   set to nil. Normally, this should be taken care of when the items are
       #   saved, but this method allows the process to be reset in case of data
       #   corruption or other issues.
-      # 
+      #
       #   The generated name of this method will depend on the sort params or
       #   the :as option provided. For example, :as => :alphabetical_order will
       #   result in a class method ::reorder_alphabetical!.
@@ -224,21 +225,21 @@ module Mongoid::SleepingKingStudios
 
     # @!method next_ordering_name
     #   Finds the next document, based on the stored ordering values.
-    # 
+    #
     #   The generated name of this method will depend on the sort params or the
     #   :as option provided. For example, :as => :alphabetical_order will
     #   result in an instance method #next_alphabetical.
-    # 
+    #
     #   @return [Mongoid::Document, nil] The next document in the order, or nil
     #     if there are no more documents in the collection.
 
     # @!method prev_ordering_name
     #   Finds the previous document, based on the stored ordering values.
-    # 
+    #
     #   The generated name of this method will depend on the sort params or the
     #   :as option provided. For example, :as => :alphabetical_order will
     #   result in an instance method #prev_alphabetical.
-    # 
+    #
     #   @return [Mongoid::Document, nil] The previous document in the order, or
     #     nil if there are no prior documents in the collection.
   end # module

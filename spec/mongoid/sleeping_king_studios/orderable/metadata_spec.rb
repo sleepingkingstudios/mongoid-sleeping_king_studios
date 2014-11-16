@@ -59,7 +59,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
 
       it 'sets the value' do
         expect(normalized_params).to be == { sort_params[0] => 1, sort_params[1].name => -1 }
-      end # it     
+      end # it
     end # context
   end # describe
 
@@ -187,6 +187,36 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         expect {
           instance[:filter] = value
         }.to change(instance, :filter_params?).to(true)
+      end # it
+    end # describe
+  end # describe
+
+  describe '#scope' do
+    it { expect(instance).to respond_to(:scope).with(0).arguments }
+    it { expect(instance.scope).to be nil }
+
+    describe '#[]' do
+      let(:value) { :parent }
+
+      it 'changes the value' do
+        expect {
+          instance[:scope] = value
+        }.to change(instance, :scope).to(value)
+      end # it
+    end # describe
+  end # describe
+
+  describe '#scope?' do
+    it { expect(instance).to respond_to(:scope?).with(0).arguments }
+    it { expect(instance.scope?).to be false }
+
+    describe '#[]' do
+      let(:value) { :parent }
+
+      it 'changes the value' do
+        expect {
+          instance[:scope] = value
+        }.to change(instance, :scope?).to(true)
       end # it
     end # describe
   end # describe

@@ -108,6 +108,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     it { expect(concern).to respond_to(:valid_options).with(0).arguments }
     it { expect(concern.valid_options).to include :as }
     it { expect(concern.valid_options).to include :filter }
+    it { expect(concern.valid_options).to include :scope }
   end # describe
 
   describe '::cache_ordering' do

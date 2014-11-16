@@ -60,31 +60,31 @@ module Mongoid::SleepingKingStudios
       end # method field_name
 
       # The name of the dirty tracking method for the order field.
-      # 
+      #
       # @return [Symbol] The method name.
       def field_was
         :"#{field_name}_was"
       end # method field_was
 
       # The name of the writer for the order field.
-      # 
+      #
       # @return [Symbol] The method name.
       def field_writer
         :"#{field_name}="
       end # method field_writer
 
       # The criteria to filter only the desired collection items to sort.
-      # 
+      #
       # @param [Mongoid::Criteria] criteria The base criteria to modify using
       #   the filter params.
-      # 
+      #
       # @return [Mongoid::Criteria]
       def filter_criteria criteria
         filter_params? ? criteria.where(filter_params) : criteria
       end # method filter_criteria
 
       # The options (if any) to filter the collection by prior to sorting.
-      # 
+      #
       # @return [Hash]
       def filter_params
         self[:filter]
@@ -95,11 +95,22 @@ module Mongoid::SleepingKingStudios
         !!self[:filter]
       end # method filter_params?
 
+      # The scope parameter to use when generating or updating document
+      # orderings.
+      def scope
+        self[:scope]
+      end # method scope
+
+      # @return [Boolean] True if a scope parameter is set; otherwise false.
+      def scope?
+        !!self[:scope]
+      end # method scope?
+
       # The criteria to be used when sorting the collection.
-      # 
+      #
       # @param [Mongoid::Criteria] criteria The base criteria to modify using
       #   the sort params.
-      # 
+      #
       # @return [Mongoid::Criteria]
       def sort_criteria criteria
         filter_criteria(criteria).order_by(self[:sort_params])
