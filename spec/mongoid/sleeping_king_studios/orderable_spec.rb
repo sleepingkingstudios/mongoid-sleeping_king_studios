@@ -6,7 +6,7 @@ require 'mongoid/sleeping_king_studios/orderable'
 require 'mongoid/sleeping_king_studios/orderable/metadata'
 
 RSpec.describe Mongoid::SleepingKingStudios::Orderable do
-  let(:concern)      { Mongoid::SleepingKingStudios::Orderable }
+  let(:concern) { Mongoid::SleepingKingStudios::Orderable }
 
   shared_examples 'sets the metadata' do |name|
     let(:loaded_meta)  { described_class.relations_sleeping_king_studios[name.to_s] }
@@ -25,7 +25,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
   end # shared examples
 
   shared_examples 'updates collection on save' do |name|
-    let(:loaded_meta)  { described_class.relations_sleeping_king_studios[name.to_s] }
+    let(:loaded_meta) { described_class.relations_sleeping_king_studios[name.to_s] }
 
     describe '#save' do
       it 'sets the order on the instance' do
@@ -53,6 +53,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
     describe '::first_ordering_name' do
       it { expect(described_class).to respond_to(first_name).with(0..1).arguments }
+
       it { expect(described_class.send first_name).to be == first_record }
 
       context 'with a provided scope' do
@@ -66,6 +67,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
     describe '::last_ordering_name' do
       it { expect(described_class).to respond_to(last_name).with(0..1).arguments }
+
       it { expect(described_class.send last_name).to be == last_record }
 
       context 'with a provided scope' do
@@ -79,6 +81,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
     describe '#next_ordering_name' do
       it { expect(instance).to respond_to(next_name).with(0..1).arguments }
+
       it { expect(instance.send next_name).to be == next_record }
 
       context 'with a provided scope' do
@@ -92,6 +95,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
     describe '#prev_ordering_name' do
       it { expect(instance).to respond_to(prev_name).with(0..1).arguments }
+
       it { expect(instance.send prev_name).to be == prev_record }
 
       context 'with a provided scope' do
@@ -137,12 +141,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::Counter }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata', :value_asc_order do
-        before(:each) { $BINDING = true }
-        after(:each)  { $BINDING = false }
-      end
+      expect_behavior 'sets the metadata', :value_asc_order
 
-      it_behaves_like 'defines the field', :value_asc_order
+      expect_behavior 'defines the field', :value_asc_order
 
       context 'with created records' do
         let(:value) { 9 }
@@ -155,13 +156,13 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           instance.value = value
         end # before each
 
-        it_behaves_like 'updates collection on save', :value_asc_order do
+        expect_behavior 'updates collection on save', :value_asc_order do
           let(:ordered_index) { 3 }
           let(:ordered_count) { 5 }
           let(:ordered_last)  { described_class.where(:value => 25).first }
         end # shared behavior
 
-        it_behaves_like 'creates helpers', :value_asc_order do
+        expect_behavior 'creates helpers', :value_asc_order do
           let(:first_record) { described_class.where(:value => 0).first }
           let(:last_record)  { described_class.where(:value => 25).first }
           let(:next_record)  { described_class.where(:value => 16).first }
@@ -176,9 +177,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ReverseCounter }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata', :value_desc_order
+      expect_behavior 'sets the metadata', :value_desc_order
 
-      it_behaves_like 'defines the field', :value_desc_order
+      expect_behavior 'defines the field', :value_desc_order
 
       context 'with created records' do
         let(:value) { 9 }
@@ -191,13 +192,13 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           instance.value = value
         end # before each
 
-        it_behaves_like 'updates collection on save', :value_desc_order do
+        expect_behavior 'updates collection on save', :value_desc_order do
           let(:ordered_index) { 2 }
           let(:ordered_count) { 5 }
           let(:ordered_last)  { described_class.where(:value => 0).first }
         end # shared behavior
 
-        it_behaves_like 'creates helpers', :value_desc_order do
+        expect_behavior 'creates helpers', :value_desc_order do
           let(:first_record) { described_class.where(:value => 25).first }
           let(:last_record)  { described_class.where(:value => 0).first }
           let(:next_record)  { described_class.where(:value => 4).first }
@@ -212,9 +213,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::Word }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata', :alphabetical_order
+      expect_behavior 'sets the metadata', :alphabetical_order
 
-      it_behaves_like 'defines the field', :alphabetical_order
+      expect_behavior 'defines the field', :alphabetical_order
 
       context 'with created records' do
         let(:value) { 'bravo' }
@@ -227,13 +228,13 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           instance.letters = value
         end # before each
 
-        it_behaves_like 'updates collection on save', :alphabetical_order do
+        expect_behavior 'updates collection on save', :alphabetical_order do
           let(:ordered_index) { 1 }
           let(:ordered_count) { 5 }
           let(:ordered_last)  { described_class.where(:letters => 'foxtrot').first }
         end # shared behavior
 
-        it_behaves_like 'creates helpers', :alphabetical_order do
+        expect_behavior 'creates helpers', :alphabetical_order do
           let(:first_record) { described_class.where(:letters => 'alpha').first }
           let(:last_record)  { described_class.where(:letters => 'foxtrot').first }
           let(:next_record)  { described_class.where(:letters => 'charlie').first }
@@ -248,9 +249,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::MultiOrder }
       let(:instance)        { described_class.new }
 
-      it_behaves_like 'sets the metadata', :primary_asc_secondary_desc_order
+      expect_behavior 'sets the metadata', :primary_asc_secondary_desc_order
 
-      it_behaves_like 'defines the field', :primary_asc_secondary_desc_order
+      expect_behavior 'defines the field', :primary_asc_secondary_desc_order
 
       context 'with created records' do
         let(:primary)   { 0 }
@@ -265,13 +266,13 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           instance.secondary = secondary
         end # before each
 
-        it_behaves_like 'updates collection on save', :primary_asc_secondary_desc_order do
+        expect_behavior 'updates collection on save', :primary_asc_secondary_desc_order do
           let(:ordered_index) { 1 }
           let(:ordered_count) { 5 }
           let(:ordered_last)  { described_class.where(:primary => 2, :secondary => 0).first }
         end # shared behavior
 
-        it_behaves_like 'creates helpers', :primary_asc_secondary_desc_order do
+        expect_behavior 'creates helpers', :primary_asc_secondary_desc_order do
           let(:first_record) { described_class.where(:primary => 0, :secondary => 1).first }
           let(:last_record)  { described_class.where(:primary => 2, :secondary => 0).first }
           let(:next_record)  { described_class.where(:primary => 1, :secondary => 1).first }
@@ -279,6 +280,174 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
           before(:each) { instance.save! }
         end # shared behavior
+      end # context
+    end # context
+
+    context 'with :scope => attribute' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ScopedOrder }
+      let(:instance)        { described_class.new }
+
+      expect_behavior 'sets the metadata', :value_asc_order
+
+      expect_behavior 'defines the field', :value_asc_order
+
+      context 'with created records' do
+        let(:value) { 'd'.ord }
+
+        before(:each) do
+          [25, 16, 100, 1, 64, 4, 0, 9, 81, 49].each do |value|
+            described_class.create! :category => 'integers', :value => value
+          end # each
+
+          ['f', 'e', 'b', 'c', 'a'].each do |value|
+            described_class.create! :category => 'chars', :value => value.ord
+          end # each
+
+          instance.category = 'chars'
+          instance.value    = value
+        end # before each
+
+        expect_behavior 'updates collection on save', :value_asc_order do
+          let(:ordered_index) { 3 }
+          let(:ordered_count) { 5 }
+          let(:ordered_last)  { described_class.where(:value => 'f'.ord).first }
+
+          it 'does not change the order on unrelated instances' do
+            expect {
+              instance.save
+            }.not_to change {
+              described_class.where(:category => 'integers', :value => 100).first.send(loaded_meta.field_name)
+            } # change
+          end # it
+        end # shared behavior
+
+        describe 'creates helpers' do
+          shared_examples 'raises an error' do
+            let(:error_message) do
+              'this ordering is scoped by category -- provide a category value or a criteria filtering results by category'
+            end # let
+
+            it 'raises an error' do
+              expect { perform_action }.to raise_error ArgumentError, error_message
+            end # it
+          end # shared_examples
+
+          shared_examples 'requires a scope' do
+            describe 'without a scope' do
+              let(:arguments) { [] }
+
+              expect_behavior 'raises an error'
+            end # describe
+
+            describe 'with a hash without a :category key' do
+              let(:scope) { { :foo => :bar  } }
+
+              expect_behavior 'raises an error'
+            end # describe
+
+            describe 'with a criteria with no category filter' do
+              let(:scope) { described_class.all }
+
+              expect_behavior 'raises an error'
+            end # describe
+
+            describe 'with a category value' do
+              let(:scope) { 'integers' }
+
+              it 'filters the result' do
+                expect(perform_action).to be == expected_value
+              end # it
+            end # describe
+
+            describe 'with a :category => value hash' do
+              let(:scope) { { :category => 'integers' } }
+
+              it 'filters the result' do
+                expect(perform_action).to be == expected_value
+              end # it
+            end # describe
+
+            describe 'with a criteria with a category filter' do
+              let(:scope) { described_class.where(:category => 'integers') }
+
+              it 'filters the result' do
+                expect(perform_action).to be == expected_value
+              end # it
+            end # describe
+          end # shared_examples
+
+          let(:base_name)  { :value_asc }
+          let(:first_name) { "first_#{base_name}".intern }
+          let(:last_name)  { "last_#{base_name}".intern }
+          let(:next_name)  { "next_#{base_name}".intern }
+          let(:prev_name)  { "prev_#{base_name}".intern }
+
+          before(:each) { instance.save! }
+
+          describe '::first_ordering_name' do
+            let(:expected_value) { described_class.where(:category => 'integers', :value => 0).first }
+            let(:arguments)      { [scope] }
+
+            it { expect(described_class).to respond_to(first_name).with(0..1).arguments }
+
+            def perform_action
+              described_class.send first_name, *arguments
+            end # method perform_action
+
+            expect_behavior 'requires a scope'
+          end # describe
+
+          describe '::last_ordering_name' do
+            let(:expected_value) { described_class.where(:category => 'integers', :value => 100).first }
+            let(:arguments)      { [scope] }
+
+            it { expect(described_class).to respond_to(last_name).with(0..1).arguments }
+
+            def perform_action
+              described_class.send last_name, *arguments
+            end # method perform_action
+
+            expect_behavior 'requires a scope'
+          end # describe
+
+          describe '#next_ordering_name' do
+            let(:expected_value) { described_class.where(:value => 'e'.ord).first }
+
+            it { expect(instance).to respond_to(next_name).with(0..1).arguments }
+
+            it { expect(instance.send next_name).to be == expected_value }
+
+            context 'with a provided scope' do
+              let(:scope) { described_class.where(:foo => :bar) }
+
+              it 'filters the result' do
+                expect(instance.send next_name, scope).to be nil
+              end # it
+            end # context
+          end # describe
+
+          describe '#prev_ordering_name' do
+            let(:expected_value) { described_class.where(:value => 'c'.ord).first }
+
+            it { expect(instance).to respond_to(prev_name).with(0..1).arguments }
+
+            it { expect(instance.send prev_name).to be == expected_value }
+
+            context 'with a provided scope' do
+              let(:scope) { described_class.where(:foo => :bar) }
+
+              it 'filters the result' do
+                expect(instance.send prev_name, scope).to be nil
+              end # it
+            end # context
+          end # describe
+
+          describe '::reorder' do
+            it { expect(described_class).to respond_to(:reorder_value_asc!).with(0).arguments }
+
+            pending
+          end # describe
+        end # describe
       end # context
     end # context
   end # describe

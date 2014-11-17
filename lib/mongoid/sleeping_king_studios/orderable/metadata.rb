@@ -79,8 +79,16 @@ module Mongoid::SleepingKingStudios
       #   the filter params.
       #
       # @return [Mongoid::Criteria]
-      def filter_criteria criteria
-        filter_params? ? criteria.where(filter_params) : criteria
+      def filter_criteria criteria, document
+        criteria = criteria.all if criteria.is_a?(Class)
+
+        # Apply filter params.
+        criteria = filter_params? ? criteria.where(filter_params) : criteria
+
+        # Apply ordering scope.
+        criteria = criteria.where(scope => document.try(scope)) if scope? && !criteria.selector.key?(scope.to_s)
+
+        criteria
       end # method filter_criteria
 
       # The options (if any) to filter the collection by prior to sorting.
@@ -112,8 +120,8 @@ module Mongoid::SleepingKingStudios
       #   the sort params.
       #
       # @return [Mongoid::Criteria]
-      def sort_criteria criteria
-        filter_criteria(criteria).order_by(self[:sort_params])
+      def sort_criteria criteria, document
+        filter_criteria(criteria, document).order_by(self[:sort_params])
       end # method sort_criteria
     end # class
   end # module

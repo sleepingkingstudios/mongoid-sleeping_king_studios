@@ -143,10 +143,12 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   end # describe
 
   describe '#filter_criteria' do
-    let(:base) { Mongoid::SleepingKingStudios::Support::Models::Base }
+    let(:document) { double('document') }
+    let(:base)     { Mongoid::SleepingKingStudios::Support::Models::Base }
 
-    it { expect(instance).to respond_to(:filter_criteria).with(1).arguments }
-    it { expect(instance.filter_criteria base.all).to be_a Mongoid::Criteria }
+    it { expect(instance).to respond_to(:filter_criteria).with(2).arguments }
+
+    it { expect(instance.filter_criteria base.all, document).to be_a Mongoid::Criteria }
 
     describe 'with filter params' do
       let(:value) { { :value.ne => nil } }
@@ -155,8 +157,22 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         expect {
           instance[:filter] = value
         }.to change {
-          instance.filter_criteria(base.all).selector
+          instance.filter_criteria(base.all, document).selector
         }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
+
+    describe 'with a scope' do
+      let(:scope)    { :category }
+      let(:category) { 'Superpowers' }
+      let(:document) { double('document', :category => category) }
+
+      it 'changes the value' do
+        expect {
+          instance[:scope] = scope
+        }.to change {
+          instance.filter_criteria(base.all, document).selector
+        }.to({ scope.to_s => category })
       end # it
     end # describe
   end # describe
@@ -222,12 +238,15 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   end # describe
 
   describe '#sort_criteria' do
+    let(:document)     { double('document') }
     let(:base)         { Mongoid::SleepingKingStudios::Support::Models::Base }
-    let(:criteria)     { instance.sort_criteria(base.all) }
+    let(:criteria)     { instance.sort_criteria(base.all, document) }
     let(:sort_options) { criteria.options[:sort] }
 
-    it { expect(instance).to respond_to(:sort_criteria).with(1).arguments }
-    it { expect(instance.sort_criteria base.all).to be_a Mongoid::Criteria }
+    it { expect(instance).to respond_to(:sort_criteria).with(2).arguments }
+
+    it { expect(instance.sort_criteria base.all, document).to be_a Mongoid::Criteria }
+
     it { expect(sort_options).to be == { sort_params.to_s => 1 } }
 
     describe 'with filter params' do
@@ -237,8 +256,22 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         expect {
           instance[:filter] = value
         }.to change {
-          instance.sort_criteria(base.all).selector
+          instance.sort_criteria(base.all, document).selector
         }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
+
+    describe 'with a scope' do
+      let(:scope)    { :category }
+      let(:category) { 'Superpowers' }
+      let(:document) { double('document', :category => category) }
+
+      it 'changes the value' do
+        expect {
+          instance[:scope] = scope
+        }.to change {
+          instance.sort_criteria(base.all, document).selector
+        }.to({ scope.to_s => category })
       end # it
     end # describe
   end # describe

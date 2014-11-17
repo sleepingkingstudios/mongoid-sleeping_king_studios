@@ -68,7 +68,7 @@ module Mongoid::SleepingKingStudios
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_callbacks base, metadata
       base.after_save do
-        criteria    = metadata.sort_criteria(base)
+        criteria    = metadata.sort_criteria(base, self)
         ordering    = criteria.to_a
         order_index = ordering.index(self)
 
@@ -111,18 +111,17 @@ module Mongoid::SleepingKingStudios
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_helpers base, metadata
       base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
-      filtered  = metadata.filter_criteria(base)
 
       # Define instance-level helpers.
       instance_methods = Module.new
 
       instance_methods.send :define_method, :"next_#{base_name}" do |scope = base|
-        metadata.filter_criteria(scope).asc(metadata.field_name).
+        metadata.filter_criteria(scope, self).asc(metadata.field_name).
           where(metadata.field_name.gt => send(metadata.field_name)).limit(1).first
       end # method
 
       instance_methods.send :define_method, :"prev_#{base_name}" do |scope = base|
-        metadata.filter_criteria(scope).desc(metadata.field_name).
+        metadata.filter_criteria(scope, self).desc(metadata.field_name).
           where(metadata.field_name.lt => send(metadata.field_name)).limit(1).first
       end # method
 
@@ -130,19 +129,43 @@ module Mongoid::SleepingKingStudios
 
       # Define class-level helpers.
       class_methods = Module.new
+      class_methods.define_singleton_method :extract_scope_criteria do |scope|
+        criteria = case
+        when scope.is_a?(Class)
+          scope.try(:all)
+        when scope.is_a?(Mongoid::Criteria)
+          scope
+        when scope.is_a?(Hash)
+          base.where(scope)
+        when metadata.scope?
+          base.where(metadata.scope => scope)
+        else
+          base
+        end # when
+
+        if metadata.scope? && !criteria.selector.key?(metadata.scope.to_s)
+          raise ArgumentError.new "this ordering is scoped by #{metadata.scope} -- provide a #{metadata.scope} value or a criteria filtering results by #{metadata.scope}"
+        end # if
+
+        criteria
+      end # class method
 
       class_methods.send :define_method, :"first_#{base_name}" do |scope = base|
-        metadata.filter_criteria(scope).asc(metadata.field_name).limit(1).first
+        criteria = class_methods.extract_scope_criteria(scope)
+
+        metadata.filter_criteria(criteria, nil).asc(metadata.field_name).limit(1).first
       end # method
 
       class_methods.send :define_method, :"last_#{base_name}" do |scope = base|
-        metadata.filter_criteria(scope).desc(metadata.field_name).limit(1).first
+        criteria = class_methods.extract_scope_criteria(scope)
+
+        metadata.filter_criteria(criteria, nil).desc(metadata.field_name).limit(1).first
       end # method
 
       class_methods.send :define_method, :"reorder_#{base_name}!" do
         base.update_all(metadata.field_name => nil)
 
-        criteria = metadata.sort_criteria(base)
+        criteria = metadata.sort_criteria(base, nil)
         ordering = criteria.to_a
 
         ordering.each_with_index do |record, index|
