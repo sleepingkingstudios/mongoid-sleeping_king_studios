@@ -7,10 +7,16 @@ module Mongoid::SleepingKingStudios
     # Stores information about an Orderable concern.
     class Metadata < Mongoid::SleepingKingStudios::Concern::Metadata
       class << self
-        def default_field_name sort_params
-          (sort_params.map { |key, value|
+        def default_field_name sort_params, options = {}
+          name = (sort_params.map { |key, value|
             "#{key}_#{value == 1 ? 'asc' : 'desc'}"
-          }.join('_') + '_order').intern
+          }.join('_'))
+
+          name << "_by_#{options[:scope].to_s.underscore}" if options[:scope]
+
+          name << '_order'
+
+          name.intern
         end # class method default_field_name
 
         def normalize_sort_params sort_params
@@ -50,7 +56,7 @@ module Mongoid::SleepingKingStudios
       #
       # @return [Symbol] The field name.
       def field_name
-        fetch(:as, Metadata.default_field_name(self[:sort_params])).intern
+        fetch(:as, Metadata.default_field_name(self[:sort_params], properties)).intern
       end # method field_name
 
       # @return [Boolean] True if a custom field name is defined; otherwise

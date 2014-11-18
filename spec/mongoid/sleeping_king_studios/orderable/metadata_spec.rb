@@ -15,8 +15,14 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
   end # let
 
   describe '::default_field_name' do
-    it { expect(described_class).to respond_to(:default_field_name).with(1).arguments }
+    it { expect(described_class).to respond_to(:default_field_name).with(1..2).arguments }
     it { expect(described_class.default_field_name normalized_params).to be == :placeholder_asc_order }
+
+    describe 'with a scope' do
+      let(:options) { { :scope => :category } }
+
+      it { expect(described_class.default_field_name normalized_params, options).to be == :placeholder_asc_by_category_order }
+    end # describe
   end # describe
 
   describe '::normalize_sort_params' do
@@ -85,6 +91,15 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
         expect(instance.field_name).to be == value
       end # it
     end # context
+
+    context 'with :scope option' do
+      let(:value)      { :category }
+      let(:properties) { super().merge :scope => value }
+
+      it 'returns the value' do
+        expect(instance.field_name).to be == :placeholder_asc_by_category_order
+      end # it
+    end # conttext
 
     context 'with a String value' do
       let(:value) { 'custom_order' }

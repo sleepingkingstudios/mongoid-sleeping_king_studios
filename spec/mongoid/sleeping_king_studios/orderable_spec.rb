@@ -287,9 +287,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ScopedOrder }
       let(:instance)        { described_class.new }
 
-      expect_behavior 'sets the metadata', :value_asc_order
+      expect_behavior 'sets the metadata', :value_asc_by_category_order
 
-      expect_behavior 'defines the field', :value_asc_order
+      expect_behavior 'defines the field', :value_asc_by_category_order
 
       context 'with created records' do
         let(:value) { 'd'.ord }
@@ -307,7 +307,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           instance.value    = value
         end # before each
 
-        expect_behavior 'updates collection on save', :value_asc_order do
+        expect_behavior 'updates collection on save', :value_asc_by_category_order do
           let(:ordered_index) { 3 }
           let(:ordered_count) { 5 }
           let(:ordered_last)  { described_class.where(:value => 'f'.ord).first }
@@ -376,7 +376,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             end # describe
           end # shared_examples
 
-          let(:base_name)  { :value_asc }
+          let(:base_name)  { :value_asc_by_category }
           let(:first_name) { "first_#{base_name}".intern }
           let(:last_name)  { "last_#{base_name}".intern }
           let(:next_name)  { "next_#{base_name}".intern }
@@ -443,7 +443,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           end # describe
 
           describe '::reorder' do
-            it { expect(described_class).to respond_to(:reorder_value_asc!).with(0).arguments }
+            it { expect(described_class).to respond_to(:reorder_value_asc_by_category!).with(0).arguments }
 
             pending
           end # describe
