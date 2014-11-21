@@ -23,6 +23,8 @@ module Mongoid::SleepingKingStudios
     extend ActiveSupport::Concern
     extend Mongoid::SleepingKingStudios::Concern
 
+    EMPTY_SCOPE = Object.new.freeze
+
     # @api private
     #
     # Sets up the orderable relation, creating fields, callbacks and helper
@@ -129,7 +131,8 @@ module Mongoid::SleepingKingStudios
 
       # Define class-level helpers.
       class_methods = Module.new
-      class_methods.define_singleton_method :extract_scope_criteria do |scope|
+
+      extract_scope_criteria = ->(scope) {
         criteria = case
         when scope.is_a?(Class)
           scope.try(:all)
@@ -148,29 +151,48 @@ module Mongoid::SleepingKingStudios
         end # if
 
         criteria
-      end # class method
+      } # end lambda
 
       class_methods.send :define_method, :"first_#{base_name}" do |scope = base|
-        criteria = class_methods.extract_scope_criteria(scope)
+        criteria = extract_scope_criteria.call(scope)
 
-        metadata.filter_criteria(criteria, nil).asc(metadata.field_name).limit(1).first
+        metadata.filter_criteria(criteria).asc(metadata.field_name).limit(1).first
       end # method
 
       class_methods.send :define_method, :"last_#{base_name}" do |scope = base|
-        criteria = class_methods.extract_scope_criteria(scope)
+        criteria = extract_scope_criteria.call(scope)
 
-        metadata.filter_criteria(criteria, nil).desc(metadata.field_name).limit(1).first
+        metadata.filter_criteria(criteria).desc(metadata.field_name).limit(1).first
       end # method
 
-      class_methods.send :define_method, :"reorder_#{base_name}!" do
-        base.update_all(metadata.field_name => nil)
-
-        criteria = metadata.sort_criteria(base, nil)
-        ordering = criteria.to_a
-
-        ordering.each_with_index do |record, index|
+      reorder_scoped_criteria = ->(criteria) {
+        criteria.to_a.each_with_index do |record, index|
           record.set(metadata.field_name => index)
         end # each
+      } # end lambda
+
+      class_methods.send :define_method, :"reorder_#{base_name}!" do |scope = EMPTY_SCOPE|
+        if metadata.scope?
+          if scope == EMPTY_SCOPE
+            base.update_all(metadata.field_name => nil)
+
+            all_scopes = base.pluck(metadata.scope).uniq
+
+            all_scopes.each do |scope|
+              reorder_scoped_criteria.call(metadata.sort_criteria(base, scope))
+            end # each
+          else
+            criteria = metadata.sort_criteria(base, scope)
+
+            criteria.update_all(metadata.field_name => nil)
+
+            reorder_scoped_criteria.call(criteria)
+          end # if-else
+        else
+          base.update_all(metadata.field_name => nil)
+
+          reorder_scoped_criteria.call(metadata.sort_criteria(base))
+        end # if-else
       end # method
 
       base.extend class_methods

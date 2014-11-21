@@ -295,7 +295,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         let(:value) { 'd'.ord }
 
         before(:each) do
-          [25, 16, 100, 1, 64, 4, 0, 9, 81, 49].each do |value|
+          [25, 16, 36, 100, 1, 64, 4, 0, 9, 81, 49].each do |value|
             described_class.create! :category => 'integers', :value => value
           end # each
 
@@ -443,9 +443,44 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           end # describe
 
           describe '::reorder' do
-            it { expect(described_class).to respond_to(:reorder_value_asc_by_category!).with(0).arguments }
+            it { expect(described_class).to respond_to(:reorder_value_asc_by_category!).with(0..1).arguments }
 
-            pending
+            context 'with scrambled orders' do
+              let(:chars)    { described_class.where(:category => 'chars') }
+              let(:integers) { described_class.where(:category => 'integers') }
+
+              before(:each) do
+                chars.where(:value => 'b'.ord).first.set(:value_asc_by_category_order => 7)
+                chars.where(:value => 'e'.ord).first.set(:value_asc_by_category_order => -1)
+                chars.where(:value => 'c'.ord).first.set(:value_asc_by_category_order => nil)
+
+                integers.where(:value => 64).first.set(:value_asc_by_category_order => -5)
+                integers.where(:value => 16).first.set(:value_asc_by_category_order => 15151)
+                integers.where(:value => 49).first.set(:value_asc_by_category_order => nil)
+              end # before
+
+              it 'corrects the order of all scopes' do
+                described_class.reorder_value_asc_by_category!
+
+                # Corrects the order of char values.
+                expect(chars.where(:value => 'b'.ord).first.value_asc_by_category_order).to be == 1
+
+                # Corrects the order of nteger values.
+                expect(integers.where(:value => 64).first.value_asc_by_category_order).to be == 8
+              end # it
+
+              describe 'with a scope' do
+                it 'corrects the order of that scope' do
+                  described_class.reorder_value_asc_by_category! :chars
+
+                  # Corrects the order of char values.
+                  expect(chars.where(:value => 'b'.ord).first.value_asc_by_category_order).to be == 1
+
+                  # Corrects the order of nteger values.
+                  expect(integers.where(:value => 64).first.value_asc_by_category_order).to be == -5
+                end # it
+              end # describe
+            end # context
           end # describe
         end # describe
       end # context

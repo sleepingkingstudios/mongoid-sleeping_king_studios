@@ -85,14 +85,14 @@ module Mongoid::SleepingKingStudios
       #   the filter params.
       #
       # @return [Mongoid::Criteria]
-      def filter_criteria criteria, document
+      def filter_criteria criteria, scope_value = Orderable::EMPTY_SCOPE
         criteria = criteria.all if criteria.is_a?(Class)
 
         # Apply filter params.
         criteria = filter_params? ? criteria.where(filter_params) : criteria
 
         # Apply ordering scope.
-        criteria = criteria.where(scope => document.try(scope)) if scope? && !criteria.selector.key?(scope.to_s)
+        criteria = criteria.where(scope => normalize_scope_value(scope_value)) if scope? &&  scope_value != Orderable::EMPTY_SCOPE
 
         criteria
       end # method filter_criteria
@@ -126,9 +126,22 @@ module Mongoid::SleepingKingStudios
       #   the sort params.
       #
       # @return [Mongoid::Criteria]
-      def sort_criteria criteria, document
+      def sort_criteria criteria, document = Orderable::EMPTY_SCOPE
         filter_criteria(criteria, document).order_by(self[:sort_params])
       end # method sort_criteria
+
+      private
+
+      def normalize_scope_value value
+        case
+        when value.is_a?(Mongoid::Document)
+          value.try(scope)
+        when value.is_a?(Hash)
+          value[scope]
+        else
+          value
+        end # case
+      end # method normalize_scope_value
     end # class
   end # module
 end # module

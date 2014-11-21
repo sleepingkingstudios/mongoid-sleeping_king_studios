@@ -161,14 +161,14 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     let(:document) { double('document') }
     let(:base)     { Mongoid::SleepingKingStudios::Support::Models::Base }
 
-    it { expect(instance).to respond_to(:filter_criteria).with(2).arguments }
+    it { expect(instance).to respond_to(:filter_criteria).with(1..2).arguments }
 
     it { expect(instance.filter_criteria base.all, document).to be_a Mongoid::Criteria }
 
-    describe 'with filter params' do
+    describe 'with filter_params' do
       let(:value) { { :value.ne => nil } }
 
-      it 'changes the value' do
+      it 'changes the selector' do
         expect {
           instance[:filter] = value
         }.to change {
@@ -178,17 +178,52 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     end # describe
 
     describe 'with a scope' do
-      let(:scope)    { :category }
-      let(:category) { 'Superpowers' }
-      let(:document) { double('document', :category => category) }
+      let(:scope) { :category }
 
-      it 'changes the value' do
-        expect {
-          instance[:scope] = scope
-        }.to change {
-          instance.filter_criteria(base.all, document).selector
-        }.to({ scope.to_s => category })
-      end # it
+      describe 'without a value' do
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.not_to change {
+            instance.filter_criteria(base.all).selector
+          } # change matcher
+        end # it
+      end # describe
+
+      describe 'with nil' do
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.to change {
+            instance.filter_criteria(base.all, nil).selector
+          }.to({ scope.to_s => nil })
+        end # it
+      end # describe
+
+      describe 'with a literal value' do
+        let(:category) { 'Superpowers' }
+
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.to change {
+            instance.filter_criteria(base.all, category).selector
+          }.to({ scope.to_s => category })
+        end # it
+      end # describe
+
+      describe 'with a document' do
+        let(:category) { 'Superpowers' }
+        let(:document) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ScopedOrder.new :category => category }
+
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.to change {
+            instance.filter_criteria(base.all, document).selector
+          }.to({ scope.to_s => category })
+        end # it
+      end # describe
     end # describe
   end # describe
 
@@ -258,7 +293,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     let(:criteria)     { instance.sort_criteria(base.all, document) }
     let(:sort_options) { criteria.options[:sort] }
 
-    it { expect(instance).to respond_to(:sort_criteria).with(2).arguments }
+    it { expect(instance).to respond_to(:sort_criteria).with(1..2).arguments }
 
     it { expect(instance.sort_criteria base.all, document).to be_a Mongoid::Criteria }
 
@@ -277,17 +312,52 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     end # describe
 
     describe 'with a scope' do
-      let(:scope)    { :category }
-      let(:category) { 'Superpowers' }
-      let(:document) { double('document', :category => category) }
+      let(:scope) { :category }
 
-      it 'changes the value' do
-        expect {
-          instance[:scope] = scope
-        }.to change {
-          instance.sort_criteria(base.all, document).selector
-        }.to({ scope.to_s => category })
-      end # it
+      describe 'without a value' do
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.not_to change {
+            instance.sort_criteria(base.all).selector
+          } # change matcher
+        end # it
+      end # describe
+
+      describe 'with nil' do
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.to change {
+            instance.sort_criteria(base.all, nil).selector
+          }.to({ scope.to_s => nil })
+        end # it
+      end # describe
+
+      describe 'with a literal value' do
+        let(:category) { 'Superpowers' }
+
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.to change {
+            instance.sort_criteria(base.all, category).selector
+          }.to({ scope.to_s => category })
+        end # it
+      end # describe
+
+      describe 'with a document' do
+        let(:category) { 'Superpowers' }
+        let(:document) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ScopedOrder.new :category => category }
+
+        it 'changes the selector' do
+          expect {
+            instance[:scope] = scope
+          }.to change {
+            instance.sort_criteria(base.all, document).selector
+          }.to({ scope.to_s => category })
+        end # it
+      end # describe
     end # describe
   end # describe
 end # describe
