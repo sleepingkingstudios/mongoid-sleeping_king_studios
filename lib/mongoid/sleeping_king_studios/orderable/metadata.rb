@@ -1,6 +1,7 @@
 # lib/mongoid/sleeping_king_studios/orderable/metadata.rb
 
 require 'mongoid/sleeping_king_studios/concern/metadata'
+require 'sleeping_king_studios/tools/object_tools'
 
 module Mongoid::SleepingKingStudios
   module Orderable
@@ -89,7 +90,18 @@ module Mongoid::SleepingKingStudios
         criteria = criteria.all if criteria.is_a?(Class)
 
         # Apply filter params.
-        criteria = filter_params? ? criteria.where(filter_params) : criteria
+        if filter_params?
+          filter = filter_params.is_a?(Proc) ?
+            SleepingKingStudios::Tools::ObjectTools.apply(criteria.klass, filter_params) :
+            filter_params
+
+          case filter
+          when Mongoid::Criteria
+            criteria = criteria.merge(filter)
+          when Hash
+            criteria = criteria.where(filter)
+          end # case
+        end # if
 
         # Apply ordering scope.
         criteria = criteria.where(scope => normalize_scope_value(scope_value)) if scope? &&  scope_value != Orderable::EMPTY_SCOPE

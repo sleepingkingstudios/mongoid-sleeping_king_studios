@@ -165,8 +165,44 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
 
     it { expect(instance.filter_criteria base.all, document).to be_a Mongoid::Criteria }
 
-    describe 'with filter_params' do
+    describe 'with a criteria in filter_params' do
+      let(:value) { base.where(:value.ne => nil) }
+
+      it 'changes the selector' do
+        expect {
+          instance[:filter] = value
+        }.to change {
+          instance.filter_criteria(base.all, document).selector
+        }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
+
+    describe 'with a hash in filter_params' do
       let(:value) { { :value.ne => nil } }
+
+      it 'changes the selector' do
+        expect {
+          instance[:filter] = value
+        }.to change {
+          instance.filter_criteria(base.all, document).selector
+        }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
+
+    describe 'with a proc returning a criteria in filter_params' do
+      let(:value) { ->() { where(:value.ne => nil) } }
+
+      it 'changes the selector' do
+        expect {
+          instance[:filter] = value
+        }.to change {
+          instance.filter_criteria(base.all, document).selector
+        }.to({ "value" => { "$ne" => nil } })
+      end # it
+    end # describe
+
+    describe 'with a proc returning a hash in filter_params' do
+      let(:value) { ->() { { :value.ne => nil } } }
 
       it 'changes the selector' do
         expect {

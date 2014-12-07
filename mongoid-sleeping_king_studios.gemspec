@@ -5,7 +5,7 @@ require File.expand_path "lib/mongoid/sleeping_king_studios/version"
 Gem::Specification.new do |gem|
   gem.name        = 'mongoid-sleeping_king_studios'
   gem.version     = Mongoid::SleepingKingStudios::VERSION
-  gem.date        = '2013-07-19'
+  gem.date        = Time.now.utc.strftime "%Y-%m-%d"
   gem.summary     = 'A collection of Mongoid concerns and extensions.'
   gem.description = <<-DESCRIPTION
     A collection of concerns and extensions to add functionality to Mongoid
@@ -21,7 +21,7 @@ Gem::Specification.new do |gem|
   gem.files        = Dir["lib/**/*.rb", "LICENSE", "*.md"]
 
   gem.add_runtime_dependency 'mongoid',  '~> 4.0'
-  # gem.add_runtime_dependency 'sleeping_king_studios-ext', '~> 0.2'
+  gem.add_runtime_dependency 'sleeping_king_studios-tools', '~> 0.1', '>= 0.1.2'
 
   gem.add_development_dependency 'rake',                        '~> 10.3', '>= 10.3.2'
   gem.add_development_dependency 'rspec',                       '~> 3.1'

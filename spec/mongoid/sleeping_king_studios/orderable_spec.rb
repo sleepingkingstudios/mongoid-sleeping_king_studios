@@ -283,6 +283,78 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       end # context
     end # context
 
+    context 'with :filter => ->() { Hash.new(:a => :hash) }' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::DateOrder }
+      let(:instance)        { described_class.new }
+
+      expect_behavior 'sets the metadata', :past_order
+
+      expect_behavior 'defines the field', :past_order
+
+      context 'with created records' do
+        let(:value) { 2 }
+
+        before(:each) do
+          [-5, -4, -3, -2, -1, 1, 3, 4, 5].each do |value|
+            described_class.create! :dated_at => value.days.ago.beginning_of_day
+          end # each
+
+          instance.dated_at = value.days.ago.beginning_of_day
+        end # before each
+
+        expect_behavior 'updates collection on save', :past_order do
+          let(:ordered_index) { 3 }
+          let(:ordered_count) { 4 }
+          let(:ordered_last)  { described_class.where(:dated_at => 1.days.ago.beginning_of_day).first }
+        end # shared behavior
+
+        expect_behavior 'creates helpers', :past_order do
+          let(:first_record) { described_class.where(:dated_at => 5.days.ago.beginning_of_day).first }
+          let(:last_record)  { described_class.where(:dated_at => 1.days.ago.beginning_of_day).first }
+          let(:next_record)  { described_class.where(:dated_at => 1.days.ago.beginning_of_day).first }
+          let(:prev_record)  { described_class.where(:dated_at => 3.days.ago.beginning_of_day).first }
+
+          before(:each) { instance.save! }
+        end # shared behavior
+      end # context
+    end # context
+
+    context 'with :filter => ->() { where(:a => :criteria) }' do
+      let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::DateOrder }
+      let(:instance)        { described_class.new }
+
+      expect_behavior 'sets the metadata', :future_order
+
+      expect_behavior 'defines the field', :future_order
+
+      context 'with created records' do
+        let(:value) { -2 }
+
+        before(:each) do
+          [-5, -4, -3, -1, 1, 2, 3, 4, 5].each do |value|
+            described_class.create! :dated_at => value.days.ago.beginning_of_day
+          end # each
+
+          instance.dated_at = value.days.ago.beginning_of_day
+        end # before each
+
+        expect_behavior 'updates collection on save', :future_order do
+          let(:ordered_index) { 1 }
+          let(:ordered_count) { 4 }
+          let(:ordered_last)  { described_class.where(:dated_at => -5.days.ago.beginning_of_day).first }
+        end # shared behavior
+
+        expect_behavior 'creates helpers', :future_order do
+          let(:first_record) { described_class.where(:dated_at => -1.days.ago.beginning_of_day).first }
+          let(:last_record)  { described_class.where(:dated_at => -5.days.ago.beginning_of_day).first }
+          let(:next_record)  { described_class.where(:dated_at => -3.days.ago.beginning_of_day).first }
+          let(:prev_record)  { described_class.where(:dated_at => -1.days.ago.beginning_of_day).first }
+
+          before(:each) { instance.save! }
+        end # shared behavior
+      end # context
+    end # context
+
     context 'with :scope => attribute' do
       let(:described_class) { Mongoid::SleepingKingStudios::Support::Models::Orderable::ScopedOrder }
       let(:instance)        { described_class.new }

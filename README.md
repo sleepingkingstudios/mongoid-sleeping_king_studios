@@ -103,9 +103,9 @@ The ::cache_ordering method accepts a subset of the params for an Origin
 #### Helpers
 
 Creating an ordering cache also creates the following helpers. The name of the
-generated helpers will depend on the sort params provided, or the name given 
-via the :as option (see below). For example, providing :as => 
-:alphabetical_order will generate helpers \#next_alphabetical, 
+generated helpers will depend on the sort params provided, or the name given
+via the :as option (see below). For example, providing :as =>
+:alphabetical_order will generate helpers \#next_alphabetical,
 \#prev_alphabetical, and ::reorder_alphabetical!.
 
 ##### \#next_ordering_name
@@ -115,25 +115,25 @@ scope parameter to filter the results.
 
 ##### \#prev_ordering_name
 
-Finds the previous document, based on the stored ordering values. Takes an 
+Finds the previous document, based on the stored ordering values. Takes an
 optional scope parameter to filter the results.
 
 ##### \::first_ordering_name
 
-(Class Method) Finds the first document, based on the stored ordering values. 
+(Class Method) Finds the first document, based on the stored ordering values.
 Takes an optional scope parameter to filter the results.
 
 ##### \::last_ordering_name
 
-(Class Method) Finds the last document, based on the stored ordering values. 
+(Class Method) Finds the last document, based on the stored ordering values.
 Takes an optional scope parameter to filter the results.
 
 ##### ::reorder_ordering_name!
 
-(Class Method) Loops through the collection and sets each item's field to the 
-appropriate ordered index. Normally, this is handled on item save, but this 
-helper allows a bulk update of the collection when adding the concern to an 
-existing model, or if data corruption or other issues have broken the existing 
+(Class Method) Loops through the collection and sets each item's field to the
+appropriate ordered index. Normally, this is handled on item save, but this
+helper allows a bulk update of the collection when adding the concern to an
+existing model, or if data corruption or other issues have broken the existing
 values.
 
 #### Options
@@ -142,8 +142,8 @@ values.
 
     cache_ordering sort_params, :as => :named_order
 
-Sets the name of the generated order field and helpers. If no name is 
-specified, one will be automatically generated of the form 
+Sets the name of the generated order field and helpers. If no name is
+specified, one will be automatically generated of the form
 first_field_desc_second_field_asc_order.
 
 ##### Filter
@@ -151,8 +151,18 @@ first_field_desc_second_field_asc_order.
     cache_ordering sort_params, :filter => { :published => true }
 
 Restricts which records from the collection will be sorted to generate the
-ordering values. If a record is filtered out, its ordering field will be set 
-to nil.
+ordering values. If a record is filtered out, its ordering field will be set
+to nil. The filter value can be a hash or a criteria (e.g. `where(:published =>
+true`)). Alternatively, the filter value can be a proc, which will be evaluated
+in the context of the base class each time the ordering is set.
+
+##### Scope
+
+    cache_ordering sort_params, :scope => :category
+
+Sets a scope on the ordering using one of the model fields. When generating the ordering numbers, each document is compared only to other documents with the same value in that field, which results in an independent ordering sequence for each value. The ordering value is still stored in the `:ordering_name` field.
+
+For example, with options set to `:scope => :category`, documents with a category of "clients" will be ordered separately from documents with a category of "prospects". Alternatively, to scope the ordering by a relation (such as a `BlogPost` having a separate order for each `Blog`), set the scope option to be the foreign key for the relation, e.g. `cache_ordering sort_params, :scope => :blog_id`.
 
 ### Sluggable
 
