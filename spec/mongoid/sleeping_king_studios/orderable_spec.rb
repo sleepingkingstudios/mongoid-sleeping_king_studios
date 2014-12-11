@@ -367,7 +367,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         let(:value) { 'd'.ord }
 
         before(:each) do
-          [25, 16, 36, 100, 1, 64, 4, 0, 9, 81, 49].each do |value|
+          [1, 169, 0, 144, 196, 16, 225, 4, 9, 121].each do |value|
             described_class.create! :category => 'integers', :value => value
           end # each
 
@@ -388,9 +388,32 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             expect {
               instance.save
             }.not_to change {
-              described_class.where(:category => 'integers', :value => 100).first.send(loaded_meta.field_name)
+              described_class.where(:category => 'integers', :value => 225).first.send(loaded_meta.field_name)
             } # change
           end # it
+
+          describe 'when changing scoped field' do
+            before(:each) do
+              instance.save!
+              instance.category = 'integers'
+            end # before each
+
+            it 'updates the ordering for the previous scope value' do
+              expect {
+                instance.save
+              }.to change {
+                described_class.where(:category => 'chars', :value => 'f'.ord).first.send(loaded_meta.field_name)
+              }.by(-1)
+            end # it
+
+            it 'updates the ordering for the next scope value' do
+              expect {
+                instance.save
+              }.to change {
+                described_class.where(:category => 'integers', :value => 225).first.send(loaded_meta.field_name)
+              }.by(1)
+            end # it
+          end # describe
         end # shared behavior
 
         describe 'creates helpers' do
@@ -470,7 +493,7 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           end # describe
 
           describe '::last_ordering_name' do
-            let(:expected_value) { described_class.where(:category => 'integers', :value => 100).first }
+            let(:expected_value) { described_class.where(:category => 'integers', :value => 225).first }
             let(:arguments)      { [scope] }
 
             it { expect(described_class).to respond_to(last_name).with(0..1).arguments }
@@ -526,9 +549,9 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
                 chars.where(:value => 'e'.ord).first.set(:value_asc_by_category_order => -1)
                 chars.where(:value => 'c'.ord).first.set(:value_asc_by_category_order => nil)
 
-                integers.where(:value => 64).first.set(:value_asc_by_category_order => -5)
+                integers.where(:value => 196).first.set(:value_asc_by_category_order => -5)
                 integers.where(:value => 16).first.set(:value_asc_by_category_order => 15151)
-                integers.where(:value => 49).first.set(:value_asc_by_category_order => nil)
+                integers.where(:value => 121).first.set(:value_asc_by_category_order => nil)
               end # before
 
               it 'corrects the order of all scopes' do
@@ -537,8 +560,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
                 # Corrects the order of char values.
                 expect(chars.where(:value => 'b'.ord).first.value_asc_by_category_order).to be == 1
 
-                # Corrects the order of nteger values.
-                expect(integers.where(:value => 64).first.value_asc_by_category_order).to be == 8
+                # Corrects the order of integer values.
+                expect(integers.where(:value => 196).first.value_asc_by_category_order).to be == 8
               end # it
 
               describe 'with a scope' do
@@ -548,8 +571,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
                   # Corrects the order of char values.
                   expect(chars.where(:value => 'b'.ord).first.value_asc_by_category_order).to be == 1
 
-                  # Corrects the order of nteger values.
-                  expect(integers.where(:value => 64).first.value_asc_by_category_order).to be == -5
+                  # Does not corrects the order of integer values.
+                  expect(integers.where(:value => 196).first.value_asc_by_category_order).to be == -5
                 end # it
               end # describe
             end # context

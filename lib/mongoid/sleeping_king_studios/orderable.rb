@@ -69,39 +69,56 @@ module Mongoid::SleepingKingStudios
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_callbacks base, metadata
-      base.after_save do
+      base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
+
+      callbacks = Module.new
+
+      callbacks.send :define_method, :"update_#{base_name}_on_save" do
         criteria    = metadata.sort_criteria(base, self)
         ordering    = criteria.to_a
         order_index = ordering.index(self)
+        prior_index = send(metadata.field_was)
 
-        if order_index.nil?
-          unless send(metadata.field_was).nil?
-            # The old value wasn't nil, so remember it and set the new value,
-            # then start looping through the ordered collection at the old
-            # value.
-            order_index = send(metadata.field_was)
+        return if order_index.nil? && prior_index.nil?
 
-            # Update the current instance.
-            self[metadata.field_name] = nil
+        # Update the current instance.
+        self[metadata.field_name] = order_index
 
-            # Set the value in the datastore.
-            set(metadata.field_name => order_index)
+        if metadata.scope?
+          order_scope = send(metadata.scope)
+          prior_scope = send(metadata.scope_was)
 
-            # Atomically update the subsequent documents in the collection.
-            ordering[order_index..-1].each_with_index do |object, i|
-              object.set(metadata.field_name => (order_index + i))
+          # If the scope value has changed, we also need to update the ordering
+          # for values in the previous scope.
+          if order_scope != prior_scope
+            prior_criteria = metadata.sort_criteria(base, prior_scope).where(metadata.field_name.gt => prior_index)
+            prior_ordering = prior_criteria.to_a
+
+            prior_ordering.each_with_index do |object, i|
+              object.set(metadata.field_name => (prior_index + i))
             end # each
-          end # unless
-        else
-          # Update the current instance.
-          self[metadata.field_name] = order_index
+          end # if
 
-          # Atomically update the subsequent documents in the collection.
-          ordering[order_index..-1].each_with_index do |object, i|
-            object.set(metadata.field_name => (order_index + i))
-          end # each
+          # We only need to update the new scope after the inserted value, even
+          # if the prior value was less.
+          least_index = order_index
+        else
+          # Determine the lesser of the new and previous index values so
+          # subsequent-indexed documents can be updated.
+          least_index = (order_index && prior_index) ?
+            [order_index, prior_index].min :
+            (order_index || prior_index)
         end # if
-      end # callback
+
+        # Atomically update the subsequent documents in the collection.
+        ordering[least_index..-1].each_with_index do |object, i|
+          object.set(metadata.field_name => (least_index + i))
+        end # each
+      end # method
+
+      base.send :include, callbacks
+
+      base.after_save :"update_#{base_name}_on_save"
     end # module method define_callbacks
 
     # @api private

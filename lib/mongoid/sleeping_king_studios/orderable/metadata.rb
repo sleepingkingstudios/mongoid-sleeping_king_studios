@@ -132,14 +132,23 @@ module Mongoid::SleepingKingStudios
         !!self[:scope]
       end # method scope?
 
+      # The name of the dirty tracking method for the scope field, if
+      # applicable.
+      #
+      # @return [Symbol, nil] The method name if a scope is defined; otherwise
+      #   nil.
+      def scope_was
+        scope? ? :"#{scope}_was" : nil
+      end # method scope_was
+
       # The criteria to be used when sorting the collection.
       #
       # @param [Mongoid::Criteria] criteria The base criteria to modify using
       #   the sort params.
       #
       # @return [Mongoid::Criteria]
-      def sort_criteria criteria, document = Orderable::EMPTY_SCOPE
-        filter_criteria(criteria, document).order_by(self[:sort_params])
+      def sort_criteria criteria, scope_value = Orderable::EMPTY_SCOPE
+        filter_criteria(criteria, scope_value).order_by(self[:sort_params])
       end # method sort_criteria
 
       private

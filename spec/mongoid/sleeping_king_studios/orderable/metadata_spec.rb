@@ -323,6 +323,21 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable::Metadata do
     end # describe
   end # describe
 
+  describe '#scope_was' do
+    it { expect(instance).to respond_to(:scope_was).with(0).arguments }
+    it { expect(instance.scope_was).to be nil }
+
+    describe '#[]' do
+      let(:value) { :category }
+
+      it 'changes the value' do
+        expect {
+          instance[:scope] = value
+        }.to change(instance, :scope_was).to(:"#{value}_was")
+      end # it
+    end # describe
+  end # describe
+
   describe '#sort_criteria' do
     let(:document)     { double('document') }
     let(:base)         { Mongoid::SleepingKingStudios::Support::Models::Base }
