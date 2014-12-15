@@ -44,6 +44,55 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     end # describe
   end # shared examples
 
+  shared_examples 'updates collection ordering on save' do |ordering_name, examples_name|
+    def apply_values instance, fields, values
+      fields = [fields].flatten
+      values = [values].flatten
+
+      fields.each.with_index { |field, index| instance.send :"#{field}=", values[index] }
+
+      instance.save!
+    end # method apply_values
+
+    expect_behavior examples_name
+
+    describe 'when inserting at the beginning of the ordering' do
+      before(:each) { apply_values(instance, value_field, first_value) }
+
+      expect_behavior examples_name
+    end # describe
+
+    describe 'when inserting in the middle of the ordering' do
+      before(:each) { apply_values(instance, value_field, mid_value) }
+
+      expect_behavior examples_name
+    end # describe
+
+    describe 'when inserting at the end of the ordering' do
+      before(:each) { apply_values(instance, value_field, last_value) }
+
+      expect_behavior examples_name
+    end # describe
+
+    describe 'when moving from the middle of the ordering to the beginning' do
+      before(:each) do
+        apply_values(instance, value_field, mid_value)
+        apply_values(instance, value_field, first_value)
+      end # before each
+
+      expect_behavior examples_name
+    end # describe
+
+    describe 'when moving from the middle of the ordering to the end' do
+      before(:each) do
+        apply_values(instance, value_field, mid_value)
+        apply_values(instance, value_field, last_value)
+      end # before each
+
+      expect_behavior examples_name
+    end # describe
+  end # shared_examples
+
   shared_examples 'creates helpers' do |name|
     let(:base_name)  { name.to_s.gsub(/_order\z/,'') }
     let(:first_name) { "first_#{base_name}".intern }
@@ -146,21 +195,28 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :value_asc_order
 
       context 'with created records' do
-        let(:value) { 9 }
+        shared_examples 'orders the documents by value' do
+          it 'orders the documents by value' do
+            documents = described_class.asc(:value)
+
+            expect(documents.pluck(:value_asc_order)).to be == [*0...documents.count]
+          end # it
+        end # shared_examples
+
+        let(:value_field) { :value }
+        let(:first_value) { -1 }
+        let(:mid_value)   { 9 }
+        let(:last_value)  { 36 }
 
         before(:each) do
           [25, 16, 1, 4, 0].each do |value|
             described_class.create! :value => value
           end # each
-
-          instance.value = value
         end # before each
 
-        expect_behavior 'updates collection on save', :value_asc_order do
-          let(:ordered_index) { 3 }
-          let(:ordered_count) { 5 }
-          let(:ordered_last)  { described_class.where(:value => 25).first }
-        end # shared behavior
+        expect_behavior 'updates collection ordering on save',
+          :value_asc_order,
+          'orders the documents by value'
 
         expect_behavior 'creates helpers', :value_asc_order do
           let(:first_record) { described_class.where(:value => 0).first }
@@ -168,7 +224,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_record)  { described_class.where(:value => 16).first }
           let(:prev_record)  { described_class.where(:value => 4).first }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.value = mid_value
+            instance.save!
+          end # before each
         end # shared behavior
       end # context
     end # context
@@ -182,21 +241,28 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :value_desc_order
 
       context 'with created records' do
-        let(:value) { 9 }
+        shared_examples 'orders the documents by value' do
+          it 'orders the documents by value' do
+            documents = described_class.desc(:value)
+
+            expect(documents.pluck(:value_desc_order)).to be == [*0...documents.count]
+          end # it
+        end # shared_examples
+
+        let(:value_field) { :value }
+        let(:first_value) { 36 }
+        let(:mid_value)   { 9 }
+        let(:last_value)  { -1 }
 
         before(:each) do
           [25, 16, 1, 4, 0].each do |value|
             described_class.create! :value => value
           end # each
-
-          instance.value = value
         end # before each
 
-        expect_behavior 'updates collection on save', :value_desc_order do
-          let(:ordered_index) { 2 }
-          let(:ordered_count) { 5 }
-          let(:ordered_last)  { described_class.where(:value => 0).first }
-        end # shared behavior
+        expect_behavior 'updates collection ordering on save',
+          :value_desc_order,
+          'orders the documents by value'
 
         expect_behavior 'creates helpers', :value_desc_order do
           let(:first_record) { described_class.where(:value => 25).first }
@@ -204,7 +270,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_record)  { described_class.where(:value => 4).first }
           let(:prev_record)  { described_class.where(:value => 16).first }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.value = mid_value
+            instance.save!
+          end # before each
         end # shared behavior
       end # context
     end # context
@@ -218,21 +287,28 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :alphabetical_order
 
       context 'with created records' do
-        let(:value) { 'bravo' }
+        shared_examples 'orders the documents in alphabetical order' do
+          it 'orders the documents in alphabetical order' do
+            documents = described_class.asc(:letters).where(:letters.ne => nil)
+
+            expect(documents.pluck(:alphabetical_order)).to be == [*0...documents.count]
+          end # it
+        end # shared_examples
+
+        let(:value_field) { :letters }
+        let(:first_value) { 'alpha' }
+        let(:mid_value)   { 'bravo' }
+        let(:last_value)  { 'foxtrot' }
 
         before(:each) do
           ['foxtrot', nil, 'alpha', 'delta', nil, nil, 'charlie', 'echo'].each do |value|
             described_class.create! :letters => value
           end # each
-
-          instance.letters = value
         end # before each
 
-        expect_behavior 'updates collection on save', :alphabetical_order do
-          let(:ordered_index) { 1 }
-          let(:ordered_count) { 5 }
-          let(:ordered_last)  { described_class.where(:letters => 'foxtrot').first }
-        end # shared behavior
+        expect_behavior 'updates collection ordering on save',
+          :alphabetical_order,
+          'orders the documents in alphabetical order'
 
         expect_behavior 'creates helpers', :alphabetical_order do
           let(:first_record) { described_class.where(:letters => 'alpha').first }
@@ -240,7 +316,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_record)  { described_class.where(:letters => 'charlie').first }
           let(:prev_record)  { described_class.where(:letters => 'alpha').first }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.letters = mid_value
+            instance.save!
+          end # before each
         end # shared behavior
       end # context
     end # context
@@ -254,23 +333,31 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :primary_asc_secondary_desc_order
 
       context 'with created records' do
+        shared_examples 'orders the documents by primary and secondary values' do
+          it 'orders the documents by primary and secondary values' do
+            documents = described_class.asc(:primary).desc(:secondary)
+
+            expect(documents.pluck(:primary_asc_secondary_desc_order)).to be == [*0...documents.count]
+          end # it
+        end # shared_examples
+
         let(:primary)   { 0 }
         let(:secondary) { 0 }
+
+        let(:value_field) { [:primary, :secondary] }
+        let(:first_value) { [0, 1] }
+        let(:mid_value)   { [0, 0] }
+        let(:last_value)  { [2, 0] }
 
         before(:each) do
           [[0,1],[1,0],[1,1],[2,0],[2,1]].each do |(primary, secondary)|
             described_class.create! :primary => primary, :secondary => secondary
           end # each
-
-          instance.primary   = primary
-          instance.secondary = secondary
         end # before each
 
-        expect_behavior 'updates collection on save', :primary_asc_secondary_desc_order do
-          let(:ordered_index) { 1 }
-          let(:ordered_count) { 5 }
-          let(:ordered_last)  { described_class.where(:primary => 2, :secondary => 0).first }
-        end # shared behavior
+        expect_behavior 'updates collection ordering on save',
+          :primary_asc_secondary_desc_order,
+          'orders the documents by primary and secondary values'
 
         expect_behavior 'creates helpers', :primary_asc_secondary_desc_order do
           let(:first_record) { described_class.where(:primary => 0, :secondary => 1).first }
@@ -278,7 +365,11 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_record)  { described_class.where(:primary => 1, :secondary => 1).first }
           let(:prev_record)  { described_class.where(:primary => 0, :secondary => 1).first }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.primary   = mid_value[0]
+            instance.secondary = mid_value[1]
+            instance.save!
+          end # before each
         end # shared behavior
       end # context
     end # context
@@ -292,21 +383,28 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :past_order
 
       context 'with created records' do
-        let(:value) { 2 }
+        shared_examples 'orders the documents by date' do
+          it 'orders the documents by date' do
+            documents = described_class.asc(:dated_at).where(:dated_at.lte => Time.current)
+
+            expect(documents.pluck(:past_order)).to be == [*0...documents.count]
+          end # it
+        end # shared_examples
+
+        let(:value_field) { :dated_at }
+        let(:first_value) { 5.days.ago.beginning_of_day }
+        let(:mid_value)   { 2.days.ago.beginning_of_day }
+        let(:last_value)  { 1.days.ago.beginning_of_day }
 
         before(:each) do
           [-5, -4, -3, -2, -1, 1, 3, 4, 5].each do |value|
             described_class.create! :dated_at => value.days.ago.beginning_of_day
           end # each
-
-          instance.dated_at = value.days.ago.beginning_of_day
         end # before each
 
-        expect_behavior 'updates collection on save', :past_order do
-          let(:ordered_index) { 3 }
-          let(:ordered_count) { 4 }
-          let(:ordered_last)  { described_class.where(:dated_at => 1.days.ago.beginning_of_day).first }
-        end # shared behavior
+        expect_behavior 'updates collection ordering on save',
+          :past_order,
+          'orders the documents by date'
 
         expect_behavior 'creates helpers', :past_order do
           let(:first_record) { described_class.where(:dated_at => 5.days.ago.beginning_of_day).first }
@@ -314,7 +412,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_record)  { described_class.where(:dated_at => 1.days.ago.beginning_of_day).first }
           let(:prev_record)  { described_class.where(:dated_at => 3.days.ago.beginning_of_day).first }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.dated_at = mid_value
+            instance.save!
+          end # before each
         end # shared behavior
       end # context
     end # context
@@ -328,21 +429,28 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :future_order
 
       context 'with created records' do
-        let(:value) { -2 }
+        shared_examples 'orders the documents by date' do
+          it 'orders the documents by date' do
+            documents = described_class.asc(:dated_at).where(:dated_at.gte => Time.current)
+
+            expect(documents.pluck(:future_order)).to be == [*0...documents.count]
+          end # it
+        end # shared_examples
+
+        let(:value_field) { :dated_at }
+        let(:first_value) { -1.days.ago.beginning_of_day }
+        let(:mid_value)   { -2.days.ago.beginning_of_day }
+        let(:last_value)  { -5.days.ago.beginning_of_day }
 
         before(:each) do
           [-5, -4, -3, -1, 1, 2, 3, 4, 5].each do |value|
             described_class.create! :dated_at => value.days.ago.beginning_of_day
           end # each
-
-          instance.dated_at = value.days.ago.beginning_of_day
         end # before each
 
-        expect_behavior 'updates collection on save', :future_order do
-          let(:ordered_index) { 1 }
-          let(:ordered_count) { 4 }
-          let(:ordered_last)  { described_class.where(:dated_at => -5.days.ago.beginning_of_day).first }
-        end # shared behavior
+        expect_behavior 'updates collection ordering on save',
+          :future_order,
+          'orders the documents by date'
 
         expect_behavior 'creates helpers', :future_order do
           let(:first_record) { described_class.where(:dated_at => -1.days.ago.beginning_of_day).first }
@@ -350,7 +458,10 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_record)  { described_class.where(:dated_at => -3.days.ago.beginning_of_day).first }
           let(:prev_record)  { described_class.where(:dated_at => -1.days.ago.beginning_of_day).first }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.dated_at = mid_value
+            instance.save!
+          end # before each
         end # shared behavior
       end # context
     end # context
@@ -364,7 +475,22 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
       expect_behavior 'defines the field', :value_asc_by_category_order
 
       context 'with created records' do
-        let(:value) { 'd'.ord }
+        shared_examples 'orders the documents by value scoped by category' do
+          it 'orders the documents by value scoped by category' do
+            integer_documents = described_class.where(:category => 'integers').asc(:value)
+
+            expect(integer_documents.pluck(:value_asc_by_category_order)).to be == [*0...integer_documents.count]
+
+            char_documents = described_class.where(:category => 'chars').asc(:value)
+
+            expect(char_documents.pluck(:value_asc_by_category_order)).to be == [*0...char_documents.count]
+          end # it
+        end # shared_examples
+
+        let(:value_field) { [:value, :category] }
+        let(:first_value) { ['a'.ord, 'chars'] }
+        let(:mid_value)   { ['d'.ord, 'chars'] }
+        let(:last_value)  { ['f'.ord, 'chars'] }
 
         before(:each) do
           [1, 169, 0, 144, 196, 16, 225, 4, 9, 121].each do |value|
@@ -374,47 +500,33 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           ['f', 'e', 'b', 'c', 'a'].each do |value|
             described_class.create! :category => 'chars', :value => value.ord
           end # each
-
-          instance.category = 'chars'
-          instance.value    = value
         end # before each
 
-        expect_behavior 'updates collection on save', :value_asc_by_category_order do
-          let(:ordered_index) { 3 }
-          let(:ordered_count) { 5 }
-          let(:ordered_last)  { described_class.where(:value => 'f'.ord).first }
+        expect_behavior 'updates collection ordering on save',
+          :future_order,
+          'orders the documents by value scoped by category' do
+            describe 'when changing scoped field' do
+              let(:mid_value) { ['d'.ord, 'integers'] }
 
-          it 'does not change the order on unrelated instances' do
-            expect {
-              instance.save
-            }.not_to change {
-              described_class.where(:category => 'integers', :value => 225).first.send(loaded_meta.field_name)
-            } # change
-          end # it
+              describe 'when moving from the middle of the ordering to the beginning' do
+                before(:each) do
+                  apply_values(instance, value_field, mid_value)
+                  apply_values(instance, value_field, first_value)
+                end # before each
 
-          describe 'when changing scoped field' do
-            before(:each) do
-              instance.save!
-              instance.category = 'integers'
-            end # before each
+                expect_behavior 'orders the documents by value scoped by category'
+              end # describe
 
-            it 'updates the ordering for the previous scope value' do
-              expect {
-                instance.save
-              }.to change {
-                described_class.where(:category => 'chars', :value => 'f'.ord).first.send(loaded_meta.field_name)
-              }.by(-1)
-            end # it
+              describe 'when moving from the middle of the ordering to the end' do
+                before(:each) do
+                  apply_values(instance, value_field, mid_value)
+                  apply_values(instance, value_field, last_value)
+                end # before each
 
-            it 'updates the ordering for the next scope value' do
-              expect {
-                instance.save
-              }.to change {
-                described_class.where(:category => 'integers', :value => 225).first.send(loaded_meta.field_name)
-              }.by(1)
-            end # it
-          end # describe
-        end # shared behavior
+                expect_behavior 'orders the documents by value scoped by category'
+              end # describe
+            end # describe
+          end # expected behavior
 
         describe 'creates helpers' do
           shared_examples 'raises an error' do
@@ -477,7 +589,11 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
           let(:next_name)  { "next_#{base_name}".intern }
           let(:prev_name)  { "prev_#{base_name}".intern }
 
-          before(:each) { instance.save! }
+          before(:each) do
+            instance.value    = mid_value[0]
+            instance.category = mid_value[1]
+            instance.save!
+          end # before each
 
           describe '::first_ordering_name' do
             let(:expected_value) { described_class.where(:category => 'integers', :value => 0).first }

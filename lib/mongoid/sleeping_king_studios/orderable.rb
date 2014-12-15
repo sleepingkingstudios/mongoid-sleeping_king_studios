@@ -97,11 +97,17 @@ module Mongoid::SleepingKingStudios
             prior_ordering.each_with_index do |object, i|
               object.set(metadata.field_name => (prior_index + i))
             end # each
-          end # if
 
-          # We only need to update the new scope after the inserted value, even
-          # if the prior value was less.
-          least_index = order_index
+            # We only need to update the new scope after the inserted value, even
+            # if the prior value was less.
+            least_index = order_index
+          else
+            # Determine the lesser of the new and previous index values so
+            # subsequent-indexed documents can be updated.
+            least_index = (order_index && prior_index) ?
+              [order_index, prior_index].min :
+              (order_index || prior_index)
+          end # if-else
         else
           # Determine the lesser of the new and previous index values so
           # subsequent-indexed documents can be updated.
