@@ -91,6 +91,15 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
       expect_behavior examples_name
     end # describe
+
+    describe 'when deleting from the middle of the ordering' do
+      before(:each) do
+        apply_values(instance, value_field, mid_value)
+        instance.destroy
+      end # before each
+
+      expect_behavior examples_name
+    end # describe
   end # shared_examples
 
   shared_examples 'creates helpers' do |name|

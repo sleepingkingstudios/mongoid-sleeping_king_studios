@@ -35,7 +35,7 @@ module Mongoid::SleepingKingStudios
     #   collection, generating the cached order index.
     # @param [Hash] options The options for the relation.
     def self.apply base, sort_params, options
-      validate_options    name, options
+      validate_options name, options
       sort_params = Metadata.normalize_sort_params(sort_params)
       options.update :sort_params => sort_params
       name = options.fetch(:as, Metadata.default_field_name(sort_params, options))
@@ -122,9 +122,23 @@ module Mongoid::SleepingKingStudios
         end # each
       end # method
 
+      callbacks.send :define_method, :"update_#{base_name}_on_destroy" do
+        criteria    = metadata.sort_criteria(base, self)
+        ordering    = criteria.to_a
+        prior_index = send(metadata.field_was)
+
+        return if prior_index.nil?
+
+        ordering[prior_index..-1].each_with_index do |object, i|
+          object.set(metadata.field_name => (prior_index + i))
+        end # each
+      end # method
+
       base.send :include, callbacks
 
       base.after_save :"update_#{base_name}_on_save"
+
+      base.after_destroy :"update_#{base_name}_on_destroy"
     end # module method define_callbacks
 
     # @api private
