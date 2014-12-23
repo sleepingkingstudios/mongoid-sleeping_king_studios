@@ -24,26 +24,6 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
     end # describe
   end # shared examples
 
-  shared_examples 'updates collection on save' do |name|
-    let(:loaded_meta) { described_class.relations_sleeping_king_studios[name.to_s] }
-
-    describe '#save' do
-      it 'sets the order on the instance' do
-        expect {
-          instance.save
-          instance.reload
-        }.to change(instance, loaded_meta.field_name).to(ordered_index)
-      end # it
-
-      it 'sets the order on subsequent instances' do
-        expect {
-          instance.save
-          ordered_last.reload
-        }.to change(ordered_last, loaded_meta.field_name).to(ordered_count)
-      end # it
-    end # describe
-  end # shared examples
-
   shared_examples 'updates collection ordering on save' do |ordering_name, examples_name|
     def apply_values instance, fields, values
       fields = [fields].flatten

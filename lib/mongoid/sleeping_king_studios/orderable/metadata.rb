@@ -1,6 +1,7 @@
 # lib/mongoid/sleeping_king_studios/orderable/metadata.rb
 
 require 'mongoid/sleeping_king_studios/concern/metadata'
+require 'mongoid/sleeping_king_studios/tools/criteria_tools'
 require 'sleeping_king_studios/tools/object_tools'
 
 module Mongoid::SleepingKingStudios
@@ -97,9 +98,9 @@ module Mongoid::SleepingKingStudios
 
           case filter
           when Mongoid::Criteria
-            criteria = criteria.merge(filter)
+            criteria = Mongoid::SleepingKingStudios::Tools::CriteriaTools.union(filter, criteria)
           when Hash
-            criteria = criteria.where(filter)
+            criteria = Mongoid::SleepingKingStudios::Tools::CriteriaTools.union(criteria.where(filter), criteria)
           end # case
         end # if
 

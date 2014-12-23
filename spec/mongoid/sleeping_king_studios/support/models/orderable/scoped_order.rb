@@ -10,6 +10,6 @@ module Mongoid::SleepingKingStudios::Support::Models::Orderable
     field :category, :type => String
     field :value,    :type => Integer
 
-    cache_ordering :value, :scope => :category
+    cache_ordering :value, :filter => { :category.ne => nil }, :scope => :category
   end # class
 end # module
