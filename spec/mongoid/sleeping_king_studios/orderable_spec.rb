@@ -281,6 +281,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             documents = described_class.asc(:letters).where(:letters.ne => nil)
 
             expect(documents.pluck(:alphabetical_order)).to be == [*0...documents.count]
+
+            expect(described_class.where(:letters => nil, :alphabetical_order.ne => nil)).to be_empty
           end # it
         end # shared_examples
 
@@ -297,7 +299,17 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
 
         expect_behavior 'updates collection ordering on save',
           :alphabetical_order,
-          'orders the documents in alphabetical order'
+          'orders the documents in alphabetical order' do
+
+          describe 'when setting to an unfiltered value from the middle of the ordering' do
+            before(:each) do
+              apply_values(instance, value_field, mid_value)
+              apply_values(instance, value_field, nil)
+            end # before each
+
+            expect_behavior 'orders the documents in alphabetical order'
+          end # describe
+        end # expected behavior
 
         expect_behavior 'creates helpers', :alphabetical_order do
           let(:first_record) { described_class.where(:letters => 'alpha').first }
@@ -473,6 +485,8 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
             char_documents = described_class.where(:category => 'chars').asc(:value)
 
             expect(char_documents.pluck(:value_asc_by_category_order)).to be == [*0...char_documents.count]
+
+            expect(described_class.where(:category => nil, :value_asc_by_category_order.ne => nil)).to be_empty
           end # it
         end # shared_examples
 
@@ -494,28 +508,49 @@ RSpec.describe Mongoid::SleepingKingStudios::Orderable do
         expect_behavior 'updates collection ordering on save',
           :future_order,
           'orders the documents by value scoped by category' do
-            describe 'when changing scoped field' do
-              let(:mid_value) { ['d'.ord, 'integers'] }
 
-              describe 'when moving from the middle of the ordering to the beginning' do
-                before(:each) do
-                  apply_values(instance, value_field, mid_value)
-                  apply_values(instance, value_field, first_value)
-                end # before each
+          describe 'when setting to an unfiltered value from the middle of the ordering' do
+            before(:each) do
+              apply_values(instance, value_field, mid_value)
+              apply_values(instance, value_field, [nil, mid_value.last])
+            end # before each
 
-                expect_behavior 'orders the documents by value scoped by category'
-              end # describe
+            expect_behavior 'orders the documents by value scoped by category'
+          end # describe
 
-              describe 'when moving from the middle of the ordering to the end' do
-                before(:each) do
-                  apply_values(instance, value_field, mid_value)
-                  apply_values(instance, value_field, last_value)
-                end # before each
+          describe 'when changing scoped field' do
+            let(:mid_value) { ['d'.ord, 'integers'] }
 
-                expect_behavior 'orders the documents by value scoped by category'
-              end # describe
+            describe 'when setting to an unfiltered scope' do
+              before(:each) do
+                apply_values(instance, value_field, mid_value)
+                $PRY = true
+                apply_values(instance, value_field, [mid_value.first, nil])
+                $PRY = false
+              end # before each
+
+              expect_behavior 'orders the documents by value scoped by category'
             end # describe
-          end # expected behavior
+
+            describe 'when moving from the middle of the ordering to the beginning' do
+              before(:each) do
+                apply_values(instance, value_field, mid_value)
+                apply_values(instance, value_field, first_value)
+              end # before each
+
+              expect_behavior 'orders the documents by value scoped by category'
+            end # describe
+
+            describe 'when moving from the middle of the ordering to the end' do
+              before(:each) do
+                apply_values(instance, value_field, mid_value)
+                apply_values(instance, value_field, last_value)
+              end # before each
+
+              expect_behavior 'orders the documents by value scoped by category'
+            end # describe
+          end # describe
+        end # expected behavior
 
         describe 'creates helpers' do
           shared_examples 'raises an error' do

@@ -105,7 +105,11 @@ module Mongoid::SleepingKingStudios
         end # if
 
         # Apply ordering scope.
-        criteria = criteria.where(scope => normalize_scope_value(scope_value)) if scope? &&  scope_value != Orderable::EMPTY_SCOPE
+        if scope? && scope_value != Orderable::EMPTY_SCOPE
+          scope_criteria = criteria.klass.where(scope => normalize_scope_value(scope_value))
+
+          criteria = Mongoid::SleepingKingStudios::Tools::CriteriaTools.union(criteria, scope_criteria)
+        end # if
 
         criteria
       end # method filter_criteria

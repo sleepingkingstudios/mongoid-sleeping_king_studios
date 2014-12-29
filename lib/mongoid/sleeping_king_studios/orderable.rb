@@ -116,10 +116,14 @@ module Mongoid::SleepingKingStudios
             (order_index || prior_index)
         end # if
 
+        # If our new value is nil, the record won't appear in the ordering, so
+        # we have to update it manually.
+        set(metadata.field_name => nil) if order_index.nil?
+
         # Atomically update the subsequent documents in the collection.
         ordering[least_index..-1].each_with_index do |object, i|
           object.set(metadata.field_name => (least_index + i))
-        end # each
+        end unless least_index.nil? # each
       end # method
 
       callbacks.send :define_method, :"update_#{base_name}_on_destroy" do
