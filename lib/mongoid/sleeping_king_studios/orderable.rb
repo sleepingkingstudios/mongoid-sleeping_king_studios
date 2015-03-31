@@ -133,7 +133,11 @@ module Mongoid::SleepingKingStudios
 
         return if prior_index.nil?
 
-        ordering[prior_index..-1].each_with_index do |object, i|
+        subsequent = ordering[prior_index..-1]
+
+        return if subsequent.blank?
+
+        subsequent.each_with_index do |object, i|
           object.set(metadata.field_name => (prior_index + i))
         end # each
       end # method
@@ -153,7 +157,7 @@ module Mongoid::SleepingKingStudios
     # @param [Class] base The base class into which the concern is mixed in.
     # @param [Metadata] metadata The metadata for the relation.
     def self.define_helpers base, metadata
-      base_name = metadata.field_name.to_s.gsub(/_order\z/,'')
+      base_name = metadata.field_name.to_s.gsub(/_order\z/, '')
 
       # Define instance-level helpers.
       instance_methods = Module.new
